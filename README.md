@@ -165,3 +165,26 @@ Resolving an incident releases **all** of its active unit assignments in the sam
 ## Assignment availability fix
 
 Saved unit locations no longer expire after fifteen minutes. This app stores manually maintained unit addresses, so age alone does not make an available unit unassignable. The timestamp is retained unchanged and displayed as the last saved location time. Distance remains an estimate from that location, not live GPS. Assignment still rejects busy or offline units, incompatible services, insufficient capability, unresolved incident addresses, missing coordinates, and resolved incidents. No synthetic location refresh or timestamp update is used to enable assignment.
+
+
+## Available units and hospital capacity
+
+At the top of the admin dashboard, **Response availability** shows units that are Available and have no active assignment, including counts by ambulance/fire/police. **Hospital receiving capacity** shows total available beds and per-hospital available, occupied, reserved, and total beds. These refresh immediately after assignments/resolution and every ten seconds while the dashboard is open.
+
+Five configured Nashville-area hospital entries are provided in `database/hospitals.json`: Midtown Community (40 beds), Eastbank General (32), South Nashville Medical (28), North River (24), and Antioch Regional (36). These are made-up teaching locations and configured capacities, not real hospital availability. Their starting occupied counts total 69, leaving 91 of 160 receiving beds available before incident reservations. `manage.py init-db` creates the new tables and inserts missing hospitals without overwriting saved capacity.
+
+Assigning an **Ambulance** automatically reserves one receiving bed at the nearest hospital **to the incident location** that has capacity. It uses straight-line distance, not travel time or clinical suitability. Multiple ambulances serving the same incident share its one-bed reservation; this model assumes one patient per incident. Police and fire assignments do not reserve hospital beds. The selected destination and reserved bed appear in the incident details.
+
+Capacity is checked transactionally with hospital row locks. If every hospital is full, the request fails clearly and neither the ambulance assignment nor a reservation is saved. An existing active hospital reservation on the same incident is reused. Resolved incidents release their bed and assigned units together; manually releasing a unit alone leaves the receiving bed reserved until the incident is resolved. Reservation history is kept and reopening does not automatically re-reserve a bed until an ambulance is assigned again.
+
+Under each hospital's **Manage beds**, admins may update total receiving beds and the baseline occupied count (excluding active reservations). The backend rejects values that would exceed capacity after reservations are included. This is reservation accounting for the class project, not a real-time inpatient census or a clinical destination-selection system.
+
+Files: `hospitals.py` implements capacity APIs and nearest-hospital reservation; `src/Capacity.jsx` implements the dashboard overview. Hospital tables and indexes are in the additive migration. The protected `GET /api/capacity` supplies unit/hospital totals; `PATCH /api/hospitals/<id>` saves validated bed counts.
+
+Run all integration suites:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest test_dispatch.DispatchIntegration test_geocoding.AddressIntegration test_hospitals.HospitalIntegration -v
+```
+
+Hospital tests use isolated test hospital rows and clean them afterward. They cover nearest selection, full-hospital fallback, one bed per incident, all-full rollback, capacity-edit protection, resolution release, no beds for police, authentication, and a concurrent race for the final available bed.

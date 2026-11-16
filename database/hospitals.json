@@ -1,0 +1,42 @@
+[
+  {
+    "hospital_name": "Midtown Community Hospital",
+    "area": "Midtown, Nashville",
+    "latitude": 36.147,
+    "longitude": -86.805,
+    "total_beds": 40,
+    "occupied_beds": 18
+  },
+  {
+    "hospital_name": "Eastbank General Hospital",
+    "area": "East Nashville",
+    "latitude": 36.177,
+    "longitude": -86.755,
+    "total_beds": 32,
+    "occupied_beds": 14
+  },
+  {
+    "hospital_name": "South Nashville Medical Center",
+    "area": "South Nashville",
+    "latitude": 36.103,
+    "longitude": -86.755,
+    "total_beds": 28,
+    "occupied_beds": 12
+  },
+  {
+    "hospital_name": "North River Hospital",
+    "area": "North Nashville",
+    "latitude": 36.215,
+    "longitude": -86.785,
+    "total_beds": 24,
+    "occupied_beds": 9
+  },
+  {
+    "hospital_name": "Antioch Regional Hospital",
+    "area": "Antioch",
+    "latitude": 36.059,
+    "longitude": -86.66,
+    "total_beds": 36,
+    "occupied_beds": 16
+  }
+]

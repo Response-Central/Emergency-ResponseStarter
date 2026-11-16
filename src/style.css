@@ -1135,3 +1135,192 @@ td button {
     flex: 1 1 130px;
   }
 }
+.capacity-overview {
+  margin: 28px 0;
+}
+.capacity-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.capacity-total {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 25px;
+}
+.capacity-total .eyebrow {
+  margin-bottom: 18px;
+}
+.capacity-value {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.capacity-value > strong {
+  font:
+    800 48px Manrope,
+    Arial;
+  color: var(--blue);
+}
+.capacity-value > span {
+  font-size: 16px;
+  font-weight: 600;
+}
+.capacity-value small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 7px;
+}
+.service-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.service-counts > span {
+  background: var(--soft);
+  border-radius: 20px;
+  padding: 7px 10px;
+  font-size: 10px;
+}
+.service-counts b {
+  margin-right: 5px;
+  color: var(--blue);
+}
+.hospital-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.hospital-card {
+  padding: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+.hospital-card h3 {
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: 1.5;
+  margin: 0;
+}
+.hospital-card > .list-heading {
+  align-items: start;
+  gap: 10px;
+}
+.hospital-symbol {
+  color: var(--red);
+  font-size: 20px;
+}
+.hospital-card > p {
+  font-size: 10px;
+}
+.bed-count {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 15px 0;
+}
+.bed-count strong {
+  font: 800 30px Manrope;
+  color: var(--blue);
+}
+.bed-count span {
+  font-size: 10px;
+}
+.bed-count small {
+  display: block;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.bed-meter {
+  height: 7px;
+  background: var(--soft);
+  border-radius: 10px;
+  display: flex;
+  overflow: hidden;
+}
+.bed-meter .occupied {
+  background: var(--muted);
+}
+.bed-meter .reserved {
+  background: var(--red);
+}
+.bed-legend {
+  font-size: 9px !important;
+}
+.hospital-card summary {
+  font-size: 10px;
+  cursor: pointer;
+  color: var(--blue);
+  font-weight: 600;
+  margin-top: 15px;
+}
+.hospital-card label {
+  font-size: 10px;
+}
+.hospital-card input {
+  padding: 9px;
+}
+.hospital-card button {
+  font-size: 10px;
+}
+.hospital-full {
+  border-color: var(--red);
+}
+.hospital-full .bed-count strong {
+  color: var(--red);
+}
+.hospital-destination {
+  padding: 22px;
+  border: 1px solid var(--blue);
+  background: var(--soft);
+  border-radius: 10px;
+  margin: 25px 0;
+}
+.hospital-destination h3 {
+  font-size: 20px !important;
+  margin: 10px 0;
+}
+.hospital-destination p {
+  font-size: 12px;
+}
+.hospital-destination .eyebrow {
+  font-size: 9px !important;
+}
+@media (max-width: 1100px) {
+  .hospital-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 680px) {
+  .capacity-summary {
+    grid-template-columns: 1fr;
+  }
+  .hospital-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .capacity-total {
+    padding: 20px;
+  }
+  .capacity-value > strong {
+    font-size: 40px;
+  }
+  .hospital-card {
+    padding: 14px;
+  }
+  .bed-count {
+    gap: 6px;
+  }
+  .bed-count strong {
+    font-size: 27px;
+  }
+  .hospital-card h3 {
+    font-size: 12px;
+  }
+}

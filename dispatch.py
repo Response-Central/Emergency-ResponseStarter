@@ -5,6 +5,7 @@ from math import radians, sin, cos, atan2, sqrt, isfinite
 from flask import jsonify, request, g
 from psycopg2.extras import RealDictCursor
 from database import get_connection
+from hospitals import reserve_nearest_hospital
 from geocoding import search_address, resolve_address, GeocodeError, AddressChoice
 
 SEVERITIES = {'Low':1, 'Moderate':2, 'High':3, 'Critical':4}
@@ -166,7 +167,11 @@ def register_dispatch(app, require_admin):
             u['eligible']=not reasons
             u['reason']=' · '.join(reasons)
         units.sort(key=lambda u:(not u['eligible'],u['distance_km'] is None,u['distance_km'] or 0,u['unit_name']))
-        return jsonify(units=units,assignments=assignments,recommended_service=service)
+        with closing(get_connection()) as c,c.cursor(cursor_factory=RealDictCursor) as q:
+            q.execute('SELECT r.*,h.hospital_name,h.area,h.latitude,h.longitude FROM HospitalReservation r JOIN Hospital h USING(hospital_id) WHERE r.incident_id=%s ORDER BY r.reserved_at DESC,r.reservation_id DESC LIMIT 1',(incident_id,))
+            destination=q.fetchone()
+        if destination:destination['distance_km']=distance(incident['latitude'],incident['longitude'],destination['latitude'],destination['longitude'])
+        return jsonify(units=units,assignments=assignments,recommended_service=service,hospital=destination)
 
     @app.post('/api/incidents/<int:incident_id>/assignments')
     @require_admin
@@ -191,9 +196,10 @@ def register_dispatch(app, require_admin):
                 return jsonify(error='Locate the reported address before assigning a unit.'),409
             if any(v is None for v in [inc['latitude'],inc['longitude'],u['latitude'],u['longitude']]):
                 return jsonify(error='Locate the reported address and set the unit location before assigning.'),409
+            hospital=reserve_nearest_hospital(q,inc,g.username,distance) if u['unit_type']=='Ambulance' else None
             q.execute('INSERT INTO IncidentAssignment (incident_id,unit_id,assigned_by) VALUES (%s,%s,%s)',(incident_id,u['unit_id'],g.username))
             q.execute("UPDATE Incident SET status='In Progress',updated_at=NOW() WHERE incident_id=%s",(incident_id,))
-        return jsonify(message='Unit assigned.'),201
+        return jsonify(message='Unit assigned.',hospital=hospital),201
 
     @app.post('/api/incidents/<int:incident_id>/assignments/<int:assignment_id>/release')
     @require_admin

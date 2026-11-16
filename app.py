@@ -103,6 +103,7 @@ def update_incident(incident_id):
         if data['status'] == 'Resolved':
             cur.execute('UPDATE IncidentAssignment SET released_at=NOW() WHERE incident_id=%s AND released_at IS NULL', (incident_id,))
             released_units = cur.rowcount
+            cur.execute('UPDATE HospitalReservation SET released_at=NOW() WHERE incident_id=%s AND released_at IS NULL', (incident_id,))
         cur.execute('UPDATE Incident SET status=%s, updated_at=NOW() WHERE incident_id=%s RETURNING incident_id', (data['status'], incident_id))
         if not cur.fetchone():
             return jsonify(error='Incident not found.'), 404
@@ -175,6 +176,8 @@ def database_error(error):
 
 from dispatch import register_dispatch
 register_dispatch(app, require_admin)
+from hospitals import register_hospitals
+register_hospitals(app, require_admin)
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5001)

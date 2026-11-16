@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DispatchPanel, { Fleet } from "./Dispatch.jsx";
+import CapacityOverview from "./Capacity.jsx";
 
 async function api(path, method = "GET", body) {
   const response = await fetch("/api" + path, {
@@ -582,6 +583,7 @@ export default function App() {
                 </button>
               </div>
             </div>
+            <CapacityOverview api={api} refreshKey={fleetVersion} />
             <div className="stats">
               {[
                 ["Total reports", rows.length, "All recorded incidents"],

@@ -6,6 +6,7 @@ from getpass import getpass
 from pathlib import Path
 from werkzeug.security import generate_password_hash
 from database import get_connection
+from hospitals import seed_hospitals
 
 parser = argparse.ArgumentParser()
 parser.add_argument('command', choices=['init-db', 'create-admin', 'seed-dispatch-demo', 'seed-units'])
@@ -17,6 +18,7 @@ with closing(get_connection()) as conn, conn:
             if cur.fetchone()[0] is None:
                 cur.execute(Path('database/schema.sql').read_text())
             cur.execute(Path('database/migration.sql').read_text())
+            seed_hospitals(cur)
             print('Database ready; existing reports preserved.')
         elif args.command in ('seed-dispatch-demo','seed-units'):
             units=json.loads(Path(__file__).with_name('database').joinpath('response_units.json').read_text(encoding='utf-8'))

@@ -19,6 +19,7 @@ class Integration(unittest.TestCase):
     def tearDownClass(cls):
         with closing(get_connection()) as c, c, c.cursor() as q:
             for incident in cls.ids:
+                q.execute('DELETE FROM HospitalReservation WHERE incident_id=%s',(incident,))
                 q.execute('DELETE FROM Incident WHERE incident_id=%s RETURNING call_id',(incident,))
                 call=q.fetchone()[0]
                 q.execute('DELETE FROM EmergencyCall WHERE call_id=%s RETURNING location_id',(call,))

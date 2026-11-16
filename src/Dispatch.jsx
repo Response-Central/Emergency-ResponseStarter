@@ -239,8 +239,13 @@ export default function DispatchPanel({ incident, api, onChange }) {
     setBusy(true);
     setError("");
     try {
-      await api(path, method, body);
-      setMessage(success);
+      const result = await api(path, method, body);
+      setMessage(
+        success +
+          (result.hospital
+            ? ` Destination: ${result.hospital.hospital_name} · receiving bed reserved.`
+            : ""),
+      );
       await onChange();
       await load();
     } catch (e) {
@@ -374,6 +379,28 @@ export default function DispatchPanel({ incident, api, onChange }) {
           location is matched.
         </p>
       </div>
+      {data?.hospital && (
+        <section
+          className="hospital-destination"
+          aria-label="Ambulance hospital destination"
+        >
+          <p className="eyebrow">AMBULANCE DESTINATION</p>
+          <h3>{data.hospital.hospital_name}</h3>
+          <p>
+            {data.hospital.area} · {data.hospital.distance_km.toFixed(2)} km
+            from the incident
+          </p>
+          <span className="badge">
+            {data.hospital.released_at
+              ? "Bed released"
+              : "1 receiving bed reserved"}
+          </span>
+          <p className="helper">
+            Nearest hospital with a free receiving bed at assignment time.
+            Distance is straight-line, not a driving route or ETA.
+          </p>
+        </section>
+      )}
       <div className="list-heading">
         <h3>
           Nearby response units{" "}

@@ -48,3 +48,22 @@ UPDATE EmergencyCall SET caller_name='Community reporter',description='Broken ou
 -- Keep historical resolved incidents from occupying a response unit.
 UPDATE IncidentAssignment a SET released_at=NOW() FROM Incident i
 WHERE i.incident_id=a.incident_id AND i.status='Resolved' AND a.released_at IS NULL;
+CREATE TABLE IF NOT EXISTS Hospital (
+ hospital_id SERIAL PRIMARY KEY,
+ hospital_name VARCHAR(100) UNIQUE NOT NULL,
+ area VARCHAR(100) NOT NULL,
+ latitude DOUBLE PRECISION NOT NULL CHECK (latitude BETWEEN -90 AND 90),
+ longitude DOUBLE PRECISION NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+ total_beds INTEGER NOT NULL CHECK (total_beds BETWEEN 1 AND 5000),
+ occupied_beds INTEGER NOT NULL DEFAULT 0 CHECK (occupied_beds>=0 AND occupied_beds<=total_beds)
+);
+CREATE TABLE IF NOT EXISTS HospitalReservation (
+ reservation_id SERIAL PRIMARY KEY,
+ hospital_id INTEGER NOT NULL REFERENCES Hospital(hospital_id),
+ incident_id INTEGER NOT NULL REFERENCES Incident(incident_id),
+ reserved_by VARCHAR(100) NOT NULL,
+ reserved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+ released_at TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS one_active_hospital_per_incident ON HospitalReservation(incident_id) WHERE released_at IS NULL;
+CREATE INDEX IF NOT EXISTS active_hospital_beds ON HospitalReservation(hospital_id) WHERE released_at IS NULL;
