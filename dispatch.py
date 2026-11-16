@@ -160,8 +160,9 @@ def register_dispatch(app, require_admin):
             if u['status']!='Available': reasons.append('Offline')
             if u['incident_id'] is not None: reasons.append('Already assigned')
             if u['capability']<SEVERITIES[incident['severity']]: reasons.append('Capability below severity')
-            if not fresh(u): reasons.append('Location older than 15 minutes or missing')
-            if u['distance_km'] is None: reasons.append('Reported address must be located')
+            if u['latitude'] is None or u['longitude'] is None: reasons.append('Unit location missing')
+            if not address_matched or incident['latitude'] is None or incident['longitude'] is None: reasons.append('Reported address must be located')
+            u['location_fresh']=fresh(u)
             u['eligible']=not reasons
             u['reason']=' · '.join(reasons)
         units.sort(key=lambda u:(not u['eligible'],u['distance_km'] is None,u['distance_km'] or 0,u['unit_name']))
@@ -188,8 +189,8 @@ def register_dispatch(app, require_admin):
                 return jsonify(error='Unit service or capability does not match this incident.'),409
             if inc['geocoded_query']!=f"{inc['address']}, {inc['city']}":
                 return jsonify(error='Locate the reported address before assigning a unit.'),409
-            if not fresh(u) or any(v is None for v in [inc['latitude'],inc['longitude'],u['latitude'],u['longitude']]):
-                return jsonify(error='Locate the reported address and update the unit location within 15 minutes.'),409
+            if any(v is None for v in [inc['latitude'],inc['longitude'],u['latitude'],u['longitude']]):
+                return jsonify(error='Locate the reported address and set the unit location before assigning.'),409
             q.execute('INSERT INTO IncidentAssignment (incident_id,unit_id,assigned_by) VALUES (%s,%s,%s)',(incident_id,u['unit_id'],g.username))
             q.execute("UPDATE Incident SET status='In Progress',updated_at=NOW() WHERE incident_id=%s",(incident_id,))
         return jsonify(message='Unit assigned.'),201

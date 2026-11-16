@@ -38,7 +38,14 @@ class DispatchIntegration(Integration):
             self.assertEqual(self.client.post(root+'/assignments',json={'unit_id':unit}).status_code,409)
         with closing(get_connection()) as c,c,c.cursor() as q:
             q.execute("UPDATE ResponseUnit SET location_updated_at=NOW()-INTERVAL '16 minutes' WHERE unit_id=%s",(u,))
-        self.assertEqual(self.client.post(root+'/assignments',json={'unit_id':u}).status_code,409)
+        # Saved addresses remain valid; age alone must not disable the whole fleet.
+        previous=next(x for x in self.client.get('/api/units').json if x['unit_id']==u)['location_updated_at']
+        candidate=next(x for x in self.client.get(root+'/dispatch').json['units'] if x['unit_id']==u)
+        self.assertTrue(candidate['eligible']);self.assertFalse(candidate['location_fresh'])
+        self.assertEqual(self.client.post(root+'/assignments',json={'unit_id':u}).status_code,201)
+        self.assertEqual(next(x for x in self.client.get('/api/units').json if x['unit_id']==u)['location_updated_at'],previous)
+        old_assignment=self.client.get(root+'/dispatch').json['assignments'][0]['assignment_id']
+        self.client.post(f'{root}/assignments/{old_assignment}/release',json={})
         self.assertEqual(self.client.patch(f'/api/units/{u}',json={'latitude':41.886,'longitude':-87.624,'status':'Offline'}).status_code,200)
         self.assertEqual(self.client.post(root+'/assignments',json={'unit_id':u}).status_code,409)
         self.client.patch(f'/api/units/{u}',json={'latitude':41.886,'longitude':-87.624,'status':'Available'})

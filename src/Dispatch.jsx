@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 const levels = ["Low", "Moderate", "High", "Critical"];
 const stamp = (t) =>
   t
-    ? new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    ? new Date(t).toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "No location";
 function UnitAddress({ unit, choices }) {
   return (
@@ -121,9 +126,11 @@ export function Fleet({ api, refreshKey }) {
                 ? `Incident #${u.incident_id}`
                 : "No active assignment"}
             </small>
-            <p className={u.location_fresh ? "helper" : "dispatch-error"}>
+            <p className="helper">
               Location {stamp(u.location_updated_at)}{" "}
-              {u.location_fresh ? "· current" : "· stale / missing"}
+              {u.latitude != null && u.longitude != null
+                ? "· saved location"
+                : "· location missing"}
             </p>
             <details>
               <summary>Update location / availability</summary>
@@ -284,7 +291,8 @@ export default function DispatchPanel({ incident, api, onChange }) {
       <p className="helper">
         Category determines service; severity sets minimum unit capability.
         Admin confirms every assignment. Distance is straight-line km, not a
-        driving route or ETA. Unit locations expire after 15 minutes.
+        driving route or ETA. Distance uses the unit’s last saved location;
+        update its address when it moves.
       </p>
       {error && (
         <p className="dispatch-error" role="alert">

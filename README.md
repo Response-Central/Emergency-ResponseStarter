@@ -117,12 +117,12 @@ Restart Flask after upgrading. Vite reloads frontend changes automatically. `see
 1. Open **Review** on an incident. The assignment panel automatically searches the street address and city supplied in the report. There is no latitude/longitude entry in the website.
 2. One precise result is saved automatically. If the lookup returns several matches, select the correct address. The matched address is displayed in the panel. A missing, ambiguous, or unavailable lookup blocks assignment and does not substitute random coordinates. Correct incomplete addresses with the reporter before proceeding.
 3. Set severity to Low, Moderate, High, or Critical and click **Save severity**. This preserves the matched location.
-4. The app matches Medical → Ambulance, Fire → Fire, Police → Police; Other permits manual selection across services. Unit capability must meet severity. Suitable available units with locations less than 15 minutes old are ranked by Haversine straight-line distance, not road distance or ETA. The nearest eligible unit is labeled.
+4. The app matches Medical → Ambulance, Fire → Fire, Police → Police; Other permits manual selection across services. Unit capability must meet severity. Suitable available units with saved locations are ranked by Haversine straight-line distance, not road distance or ETA. The nearest eligible unit is labeled.
 5. Click **Assign unit**. The incident becomes In Progress. Database row locks and a unique active-assignment index prevent double-booking. Several units can serve one incident; each unit has at most one active assignment.
 6. **Release unit** retains history and leaves the incident open. **Resolved** releases all its units. Offline units remain offline after release. Reopen resolved incidents before making a new assignment.
 7. Under **Units & availability**, update a unit using its **Current address**, not coordinates. Choose a matching location if needed and save again. Saving updates its location and timestamp. New units use the same address-based flow. An assigned unit remains occupied even if its availability is set to Available.
 
-The dashboard polls every ten seconds. Unit locations represent saved addresses; there is no GPS tracking or automatic vehicle movement. Last-known coordinates in the initial unit dataset remain available until stale; save each unit's current address when refreshing its location.
+The dashboard polls every ten seconds. Unit locations represent saved addresses; there is no GPS tracking or automatic vehicle movement. Saved coordinates remain usable regardless of age; save each unit's current address when its location changes.
 
 ### Geocoding service and privacy
 
@@ -139,7 +139,7 @@ npm run build
 .\.venv\Scripts\python.exe -m unittest test_dispatch.DispatchIntegration test_geocoding.AddressIntegration -v
 ```
 
-The tests create and remove temporary units/reports. Coverage includes service/capability matching, stale/offline units, assignment conflicts, release, auto-release on resolution, address matching, ambiguity selection, invalid selection, severity-only updates, unit address saves, lookup failure, and caching. Provider responses are mocked in automated tests; the default provider was also checked manually with public landmark addresses.
+The tests create and remove temporary units/reports. Coverage includes service/capability matching, saved locations and offline units, assignment conflicts, release, auto-release on resolution, address matching, ambiguity selection, invalid selection, severity-only updates, unit address saves, lookup failure, and caching. Provider responses are mocked in automated tests; the default provider was also checked manually with public landmark addresses.
 
 `dispatch.py` implements dispatch routes, `geocoding.py` handles the provider and cache, and `src/Dispatch.jsx` contains the assignment and fleet views. `database/migration.sql` extends the original tables additively. The API retains validated coordinate support for existing integrations, while website users work with addresses. Incident assignments require a location matched to the current reported address.
 
@@ -157,6 +157,11 @@ Clone the repository, then follow the Install, PostgreSQL, and Run steps above. 
 
 ## Expand the fleet / release units
 
-Run `python manage.py seed-units` (using your virtualenv Python) after `manage.py init-db` to add the full Nashville fleet from `database/response_units.json`. It adds missing unit names only: existing locations, availability, and assignments are preserved. Repeating the command does not duplicate the units. Units may share a base address. New entries start with a saved location timestamp; the existing 15-minute freshness rule still applies.
+Run `python manage.py seed-units` (using your virtualenv Python) after `manage.py init-db` to add the full Nashville fleet from `database/response_units.json`. It adds missing unit names only: existing locations, availability, and assignments are preserved. Repeating the command does not duplicate the units. Units may share a base address. New entries start with a saved location timestamp. Saved addresses do not expire; update each unit’s address when it moves.
 
 Resolving an incident releases **all** of its active unit assignments in the same PostgreSQL transaction as the status change. The confirmation displays the released count and the fleet refreshes immediately. Available units can then be reassigned; a unit deliberately marked Offline remains Offline. Assignment history is preserved. Rerunning `manage.py init-db` also releases any leftover active assignments on older already-resolved incidents.
+
+
+## Assignment availability fix
+
+Saved unit locations no longer expire after fifteen minutes. This app stores manually maintained unit addresses, so age alone does not make an available unit unassignable. The timestamp is retained unchanged and displayed as the last saved location time. Distance remains an estimate from that location, not live GPS. Assignment still rejects busy or offline units, incompatible services, insufficient capability, unresolved incident addresses, missing coordinates, and resolved incidents. No synthetic location refresh or timestamp update is used to enable assignment.
