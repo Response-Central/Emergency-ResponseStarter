@@ -1,0 +1,164 @@
+[
+  {
+    "unit_name": "Ambulance 01",
+    "unit_type": "Ambulance",
+    "dispatcher_name": "Medic Alex",
+    "capability": 4,
+    "latitude": 36.1361216,
+    "longitude": -86.8225064,
+    "location_address": "West End Avenue, Cherokee Park, Nashville, Davidson County, Middle Tennessee, Tennessee, 37205, United States"
+  },
+  {
+    "unit_name": "Ambulance 02",
+    "unit_type": "Ambulance",
+    "dispatcher_name": "Medic Jordan",
+    "capability": 2,
+    "latitude": 36.147089,
+    "longitude": -86.77598,
+    "location_address": "800, Fort Negley Boulevard, Wedgewood-Houston, Nashville, Davidson County, Middle Tennessee, Tennessee, 37203, United States"
+  },
+  {
+    "unit_name": "Fire Engine 01",
+    "unit_type": "Fire",
+    "dispatcher_name": "Fire crew Taylor",
+    "capability": 4,
+    "latitude": 36.160254,
+    "longitude": -86.7768171,
+    "location_address": "121, 4th Avenue South, Downtown Nashville, East Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37201, United States"
+  },
+  {
+    "unit_name": "Fire Engine 02",
+    "unit_type": "Fire",
+    "dispatcher_name": "Fire crew Casey",
+    "capability": 3,
+    "latitude": 36.1581728,
+    "longitude": -86.7760929,
+    "location_address": "Country Music Hall of Fame and Museum, 222, Rep. John Lewis Way South, Downtown Nashville, East Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37203, United States"
+  },
+  {
+    "unit_name": "Police 01",
+    "unit_type": "Police",
+    "dispatcher_name": "Patrol Morgan",
+    "capability": 4,
+    "latitude": 36.165328,
+    "longitude": -86.783331,
+    "location_address": "600, Dr. Martin L. King, Jr. Boulevard, Downtown Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37209, United States"
+  },
+  {
+    "unit_name": "Police 02",
+    "unit_type": "Police",
+    "dispatcher_name": "Patrol Riley",
+    "capability": 2,
+    "latitude": 36.1621868,
+    "longitude": -86.7778534,
+    "location_address": "150, 4th Avenue North, Downtown Nashville, East Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37219, United States"
+  },
+  {
+    "unit_name": "Ambulance 03",
+    "unit_type": "Ambulance",
+    "dispatcher_name": "Medic Avery",
+    "capability": 4,
+    "latitude": 36.1361216,
+    "longitude": -86.8225064,
+    "location_address": "West End Avenue, Cherokee Park, Nashville, Davidson County, Middle Tennessee, Tennessee, 37205, United States"
+  },
+  {
+    "unit_name": "Ambulance 04",
+    "unit_type": "Ambulance",
+    "dispatcher_name": "Medic Cameron",
+    "capability": 3,
+    "latitude": 36.147089,
+    "longitude": -86.77598,
+    "location_address": "800, Fort Negley Boulevard, Wedgewood-Houston, Nashville, Davidson County, Middle Tennessee, Tennessee, 37203, United States"
+  },
+  {
+    "unit_name": "Ambulance 05",
+    "unit_type": "Ambulance",
+    "dispatcher_name": "Medic Drew",
+    "capability": 4,
+    "latitude": 36.160254,
+    "longitude": -86.7768171,
+    "location_address": "121, 4th Avenue South, Downtown Nashville, East Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37201, United States"
+  },
+  {
+    "unit_name": "Ambulance 06",
+    "unit_type": "Ambulance",
+    "dispatcher_name": "Medic Quinn",
+    "capability": 3,
+    "latitude": 36.1581728,
+    "longitude": -86.7760929,
+    "location_address": "Country Music Hall of Fame and Museum, 222, Rep. John Lewis Way South, Downtown Nashville, East Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37203, United States"
+  },
+  {
+    "unit_name": "Fire Engine 03",
+    "unit_type": "Fire",
+    "dispatcher_name": "Fire crew Parker",
+    "capability": 4,
+    "latitude": 36.160254,
+    "longitude": -86.7768171,
+    "location_address": "121, 4th Avenue South, Downtown Nashville, East Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37201, United States"
+  },
+  {
+    "unit_name": "Fire Engine 04",
+    "unit_type": "Fire",
+    "dispatcher_name": "Fire crew Reese",
+    "capability": 3,
+    "latitude": 36.1581728,
+    "longitude": -86.7760929,
+    "location_address": "Country Music Hall of Fame and Museum, 222, Rep. John Lewis Way South, Downtown Nashville, East Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37203, United States"
+  },
+  {
+    "unit_name": "Fire Engine 05",
+    "unit_type": "Fire",
+    "dispatcher_name": "Fire crew Rowan",
+    "capability": 4,
+    "latitude": 36.165328,
+    "longitude": -86.783331,
+    "location_address": "600, Dr. Martin L. King, Jr. Boulevard, Downtown Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37209, United States"
+  },
+  {
+    "unit_name": "Fire Engine 06",
+    "unit_type": "Fire",
+    "dispatcher_name": "Fire crew Sage",
+    "capability": 3,
+    "latitude": 36.1621868,
+    "longitude": -86.7778534,
+    "location_address": "150, 4th Avenue North, Downtown Nashville, East Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37219, United States"
+  },
+  {
+    "unit_name": "Police 03",
+    "unit_type": "Police",
+    "dispatcher_name": "Patrol Blake",
+    "capability": 4,
+    "latitude": 36.165328,
+    "longitude": -86.783331,
+    "location_address": "600, Dr. Martin L. King, Jr. Boulevard, Downtown Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37209, United States"
+  },
+  {
+    "unit_name": "Police 04",
+    "unit_type": "Police",
+    "dispatcher_name": "Patrol Emerson",
+    "capability": 3,
+    "latitude": 36.1621868,
+    "longitude": -86.7778534,
+    "location_address": "150, 4th Avenue North, Downtown Nashville, East Nashville, Nashville, Davidson County, Middle Tennessee, Tennessee, 37219, United States"
+  },
+  {
+    "unit_name": "Police 05",
+    "unit_type": "Police",
+    "dispatcher_name": "Patrol Logan",
+    "capability": 4,
+    "latitude": 36.1361216,
+    "longitude": -86.8225064,
+    "location_address": "West End Avenue, Cherokee Park, Nashville, Davidson County, Middle Tennessee, Tennessee, 37205, United States"
+  },
+  {
+    "unit_name": "Police 06",
+    "unit_type": "Police",
+    "dispatcher_name": "Patrol Skyler",
+    "capability": 3,
+    "latitude": 36.147089,
+    "longitude": -86.77598,
+    "location_address": "800, Fort Negley Boulevard, Wedgewood-Houston, Nashville, Davidson County, Middle Tennessee, Tennessee, 37203, United States"
+  }
+]

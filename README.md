@@ -110,7 +110,7 @@ Upgrade an existing checkout without losing reports:
 .\.venv\Scripts\python.exe manage.py seed-units
 ```
 
-Restart Flask after upgrading. Vite reloads frontend changes automatically. `seed-units` adds six response units around Nashville, Tennessee, and one example incident if absent; the older `seed-dispatch-demo` command remains an alias. Existing bundled names are cleaned by the migration; submitted user records are retained. The units are for this academic project; the system has no actual emergency-service connection.
+Restart Flask after upgrading. Vite reloads frontend changes automatically. `seed-units` adds 18 response units around Nashville, Tennessee (6 ambulances, 6 fire engines, and 6 police units), and one example incident if absent; the older `seed-dispatch-demo` command remains an alias. Existing bundled names are cleaned by the migration; submitted user records are retained. The units are for this academic project; the system has no actual emergency-service connection.
 
 ### Assign from the reported address
 
@@ -153,3 +153,10 @@ The admin dashboard opens **New reports** for Reported cases. **Active incidents
 ## Run from GitHub
 
 Clone the repository, then follow the Install, PostgreSQL, and Run steps above. The repository includes the React/Vite source, Python API, dependency manifests and pnpm lockfile, database schema and additive migrations, admin/setup utilities, launch scripts, tests, and `.env.example`. Create your own local `.env`, initialize PostgreSQL with `manage.py init-db`, load Nashville units with `manage.py seed-units`, and create your admin using `manage.py create-admin`. Local passwords, database contents, virtual environments, and node_modules are intentionally excluded; they are created during setup.
+
+
+## Expand the fleet / release units
+
+Run `python manage.py seed-units` (using your virtualenv Python) after `manage.py init-db` to add the full Nashville fleet from `database/response_units.json`. It adds missing unit names only: existing locations, availability, and assignments are preserved. Repeating the command does not duplicate the units. Units may share a base address. New entries start with a saved location timestamp; the existing 15-minute freshness rule still applies.
+
+Resolving an incident releases **all** of its active unit assignments in the same PostgreSQL transaction as the status change. The confirmation displays the released count and the fleet refreshes immediately. Available units can then be reassigned; a unit deliberately marked Offline remains Offline. Assignment history is preserved. Rerunning `manage.py init-db` also releases any leftover active assignments on older already-resolved incidents.

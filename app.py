@@ -95,16 +95,18 @@ def update_incident(incident_id):
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or data.get('status') not in ('Reported', 'In Progress', 'Resolved'):
         return jsonify(error='Choose Reported, In Progress, or Resolved.'), 400
+    released_units = 0
     with closing(get_connection()) as conn, conn, conn.cursor() as cur:
         cur.execute('SELECT 1 FROM Incident WHERE incident_id=%s FOR UPDATE', (incident_id,))
         if not cur.fetchone():
             return jsonify(error='Incident not found.'), 404
         if data['status'] == 'Resolved':
             cur.execute('UPDATE IncidentAssignment SET released_at=NOW() WHERE incident_id=%s AND released_at IS NULL', (incident_id,))
+            released_units = cur.rowcount
         cur.execute('UPDATE Incident SET status=%s, updated_at=NOW() WHERE incident_id=%s RETURNING incident_id', (data['status'], incident_id))
         if not cur.fetchone():
             return jsonify(error='Incident not found.'), 404
-    return jsonify(message='Status updated.')
+    return jsonify(message='Status updated.', released_units=released_units)
 
 
 

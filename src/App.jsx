@@ -71,7 +71,8 @@ export default function App() {
     [search, setSearch] = useState(""),
     [selected, setSelected] = useState(null),
     [notice, setNotice] = useState(""),
-    [loaded, setLoaded] = useState(false);
+    [loaded, setLoaded] = useState(false),
+    [fleetVersion, setFleetVersion] = useState(0);
   const [theme, setTheme] = useState(() => {
     try {
       return (
@@ -111,6 +112,7 @@ export default function App() {
           : null,
       );
       setLoaded(true);
+      setFleetVersion((version) => version + 1);
     } catch (e) {
       setError(e.message);
       if (e.status === 401) {
@@ -186,11 +188,15 @@ export default function App() {
     setBusy(true);
     setError("");
     try {
-      await api("/incidents/" + item.incident_id, "PATCH", { status });
+      const result = await api("/incidents/" + item.incident_id, "PATCH", {
+        status,
+      });
       setIncidentView(registerFor(status));
       setSearch("");
       setSelected({ ...item, status });
-      setNotice(`${id(item.incident_id)} marked ${status.toLowerCase()}.`);
+      setNotice(
+        `${id(item.incident_id)} marked ${status.toLowerCase()}.${status === "Resolved" ? ` ${result.released_units} unit${result.released_units === 1 ? "" : "s"} released.` : ""}`,
+      );
       await refresh();
     } catch (e) {
       setError(e.message);
@@ -777,7 +783,7 @@ export default function App() {
                 />
               </section>
             )}
-            <Fleet api={api} />
+            <Fleet api={api} refreshKey={fleetVersion} />
           </section>
         )}
       </main>

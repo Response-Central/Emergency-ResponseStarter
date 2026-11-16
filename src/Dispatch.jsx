@@ -35,7 +35,7 @@ function UnitAddress({ unit, choices }) {
     </>
   );
 }
-export function Fleet({ api }) {
+export function Fleet({ api, refreshKey }) {
   const [units, setUnits] = useState([]),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -53,7 +53,7 @@ export function Fleet({ api }) {
     load();
     const timer = setInterval(load, 10000);
     return () => clearInterval(timer);
-  }, []);
+  }, [refreshKey]);
   async function save(e, unit) {
     e.preventDefault();
     const form = e.currentTarget;

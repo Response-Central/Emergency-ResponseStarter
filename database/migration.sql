@@ -44,3 +44,7 @@ UPDATE Location SET address='600 Charlotte Avenue',city='Nashville, TN',latitude
 WHERE location_id IN (SELECT location_id FROM EmergencyCall WHERE caller_name IN ('DEMO Dispatch Scenario','Demo Reporter'));
 UPDATE EmergencyCall SET caller_name='Campus reception',description='Medical assistance requested at the campus entrance.' WHERE caller_name='DEMO Dispatch Scenario';
 UPDATE EmergencyCall SET caller_name='Community reporter',description='Broken outdoor light near the north entrance.' WHERE caller_name='Demo Reporter';
+
+-- Keep historical resolved incidents from occupying a response unit.
+UPDATE IncidentAssignment a SET released_at=NOW() FROM Incident i
+WHERE i.incident_id=a.incident_id AND i.status='Resolved' AND a.released_at IS NULL;
