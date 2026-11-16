@@ -169,7 +169,7 @@ Saved unit locations no longer expire after fifteen minutes. This app stores man
 
 ## Available units and hospital capacity
 
-At the top of the admin dashboard, **Response availability** shows units that are Available and have no active assignment, including counts by ambulance/fire/police. **Hospital receiving capacity** shows total available beds and per-hospital available, occupied, reserved, and total beds. These refresh immediately after assignments/resolution and every ten seconds while the dashboard is open.
+The dashboard shows compact unit and bed availability totals. **Units & availability** contains fleet management and service counts. **Hospitals & beds** contains the detailed hospital available, occupied, reserved, and total bed counts. These refresh immediately after assignments/resolution and every ten seconds while the dashboard is open.
 
 Five configured Nashville-area hospital entries are provided in `database/hospitals.json`: Midtown Community (40 beds), Eastbank General (32), South Nashville Medical (28), North River (24), and Antioch Regional (36). These are made-up teaching locations and configured capacities, not real hospital availability. Their starting occupied counts total 69, leaving 91 of 160 receiving beds available before incident reservations. `manage.py init-db` creates the new tables and inserts missing hospitals without overwriting saved capacity.
 
@@ -188,3 +188,15 @@ Run all integration suites:
 ```
 
 Hospital tests use isolated test hospital rows and clean them afterward. They cover nearest selection, full-hospital fallback, one bed per incident, all-full rollback, capacity-edit protection, resolution release, no beds for police, authentication, and a concurrent race for the final available bed.
+
+
+## Separate admin pages
+
+Use the navigation beneath the admin page heading:
+
+- **Dashboard** (`/#dashboard`): compact availability summaries, incident totals, New reports, and Active incidents. Detailed fleet and hospital management are on their own pages.
+- **Units & availability** (`/#units`): unit availability summary, all response units, saved address/availability updates, and unit creation.
+- **Hospitals & beds** (`/#hospitals`): hospital receiving capacity and per-hospital bed management.
+- **Resolved cases** (`/#resolved`): completed-case search and details, with the option to reopen a case.
+
+The URL hash keeps the selected page on refresh, supports direct links and browser Back/Forward, and works without server rewrite rules. Admin session checks still protect every private page. Resolving a case opens Resolved cases; reopening moves to the appropriate dashboard register. Unit assignment and hospital reservations remain in incident details. Counts and resource lists continue to refresh on each page.

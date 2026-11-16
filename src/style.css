@@ -1324,3 +1324,64 @@ td button {
     font-size: 12px;
   }
 }
+.admin-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  padding: 18px 0;
+  margin: 6px 0 26px;
+}
+.admin-navigation a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 12px 17px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+.admin-navigation a:hover {
+  background: var(--soft);
+  color: var(--text);
+}
+.admin-navigation a[aria-current="page"] {
+  background: var(--blue);
+  color: var(--panel);
+}
+.admin-navigation a:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+.admin-navigation a span {
+  font-size: 10px;
+  background: var(--soft);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 3px 7px;
+}
+.capacity-summary.single {
+  grid-template-columns: 1fr;
+}
+.dashboard > .fleet {
+  margin-top: 22px;
+}
+@media (max-width: 680px) {
+  .admin-navigation {
+    gap: 7px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .admin-navigation a {
+    padding: 12px 10px;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .dashboard h1 {
+    overflow-wrap: anywhere;
+  }
+}

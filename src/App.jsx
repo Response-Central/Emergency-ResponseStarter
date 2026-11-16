@@ -61,8 +61,40 @@ const registers = {
     hint: "Cases move here when marked Resolved.",
   },
 };
+const adminPages = ["dashboard", "units", "hospitals", "resolved"];
+const adminSections = {
+  dashboard: {
+    label: "Dashboard",
+    title: "Incident overview",
+    description: "Review new reports and coordinate open incidents.",
+  },
+  units: {
+    label: "Units & availability",
+    title: "Units & availability",
+    description:
+      "Manage crews, saved locations, and response-unit availability.",
+  },
+  hospitals: {
+    label: "Hospitals & beds",
+    title: "Hospitals & beds",
+    description:
+      "Review receiving capacity and manage occupied and available beds.",
+  },
+  resolved: {
+    label: "Resolved cases",
+    title: "Resolved cases",
+    description: "Search completed cases and review their response history.",
+  },
+};
+const routeFromHash = () => {
+  const key = window.location.hash.replace(/^#\/?/, "");
+  return ["home", "login", "report", ...adminPages].includes(key)
+    ? key
+    : "home";
+};
 export default function App() {
-  const [page, setPage] = useState("home"),
+  const [page, setPage] = useState(routeFromHash),
+    [checkingSession, setCheckingSession] = useState(true),
     [user, setUser] = useState(null),
     [rows, setRows] = useState([]),
     [error, setError] = useState(""),
@@ -93,14 +125,38 @@ export default function App() {
   useEffect(() => {
     api("/auth/me")
       .then(setUser)
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setCheckingSession(false));
   }, []);
+  function moveTo(next) {
+    setPage(next);
+    if (window.location.hash !== "#" + next) window.location.hash = next;
+  }
   function go(next) {
     setError("");
     setNotice("");
-    setPage(next);
+    setSelected(null);
+    setSearch("");
+    if (next === "dashboard") setIncidentView("new");
+    moveTo(next);
     window.scrollTo(0, 0);
   }
+  useEffect(() => {
+    const onRoute = () => {
+      setPage(routeFromHash());
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener("hashchange", onRoute);
+    return () => window.removeEventListener("hashchange", onRoute);
+  }, []);
+  useEffect(() => {
+    if (!checkingSession && !user && adminPages.includes(page)) go("login");
+  }, [checkingSession, user, page]);
+  useEffect(() => {
+    document.title =
+      (adminSections[page]?.label || "Emergency Response") +
+      " | ResponseCentral";
+  }, [page]);
   async function refresh() {
     setBusy(true);
     setError("");
@@ -118,17 +174,17 @@ export default function App() {
       setError(e.message);
       if (e.status === 401) {
         setUser(null);
-        setPage("login");
+        moveTo("login");
       }
     } finally {
       setBusy(false);
     }
   }
   useEffect(() => {
-    if (page === "dashboard" && user) refresh();
+    if (adminPages.includes(page) && user) refresh();
   }, [page, user]);
   useEffect(() => {
-    if (page !== "dashboard" || !user) return;
+    if (!adminPages.includes(page) || !user) return;
     let cancelled = false;
     const timer = setInterval(async () => {
       try {
@@ -192,7 +248,6 @@ export default function App() {
       const result = await api("/incidents/" + item.incident_id, "PATCH", {
         status,
       });
-      setIncidentView(registerFor(status));
       setSearch("");
       setSelected({ ...item, status });
       setNotice(
@@ -206,10 +261,19 @@ export default function App() {
     }
   }
   useEffect(() => {
-    if (selected) setIncidentView(registerFor(selected.status));
+    if (selected) {
+      const section = registerFor(selected.status);
+      if (section === "resolved") {
+        moveTo("resolved");
+      } else {
+        setIncidentView(section);
+        moveTo("dashboard");
+      }
+    }
   }, [selected?.incident_id, selected?.status]);
+  const visibleRegister = page === "resolved" ? "resolved" : incidentView;
   const registerRows = rows.filter(
-    (r) => registerFor(r.status) === incidentView,
+    (r) => registerFor(r.status) === visibleRegister,
   );
   const shown = registerRows.filter((r) =>
     `${id(r.incident_id)} ${r.emergency_type} ${r.address} ${r.city}`
@@ -267,6 +331,9 @@ export default function App() {
           <div className="success" role="status">
             {notice}
           </div>
+        )}
+        {checkingSession && adminPages.includes(page) && (
+          <p role="status">Checking administrator session…</p>
         )}
         {page === "home" && (
           <>
@@ -548,17 +615,18 @@ export default function App() {
               </div>
             </section>
           ))}
-        {page === "dashboard" && user && (
+        {adminPages.includes(page) && user && (
           <section className="dashboard">
             <div className="dashboard-heading">
               <div>
                 <p className="eyebrow">OPERATIONS WORKSPACE</p>
                 <h1>
-                  Incident overview<span>.</span>
+                  {adminSections[page].title}
+                  <span>.</span>
                 </h1>
                 <p>
-                  Welcome, {user.username}. Keep every report moving toward
-                  resolution.
+                  {adminSections[page].description} Signed in as {user.username}
+                  .
                 </p>
               </div>
               <div className="actions">
@@ -583,209 +651,277 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <CapacityOverview api={api} refreshKey={fleetVersion} />
-            <div className="stats">
-              {[
-                ["Total reports", rows.length, "All recorded incidents"],
-                [
-                  "Awaiting review",
-                  rows.filter((r) => r.status === "Reported").length,
-                  "Newly reported",
-                ],
-                [
-                  "In progress",
-                  rows.filter((r) => r.status === "In Progress").length,
-                  "Work underway",
-                ],
-                [
-                  "Resolved",
-                  rows.filter((r) => r.status === "Resolved").length,
-                  "Closed incidents",
-                ],
-              ].map(([label, n, sub], i) => (
-                <article key={label}>
-                  <span className={"stat-dot dot-" + i} />
-                  <p>{label}</p>
-                  <strong>{loaded ? n : "—"}</strong>
-                  <small>{sub}</small>
-                </article>
-              ))}
-            </div>
-            <div
-              className="register-tabs"
-              role="group"
-              aria-label="Incident registers"
-            >
-              {Object.entries(registers).map(([key, register]) => (
-                <button
+            <nav className="admin-navigation" aria-label="Admin navigation">
+              {Object.entries(adminSections).map(([key, section]) => (
+                <a
+                  href={"#" + key}
                   key={key}
-                  className={incidentView === key ? "current" : ""}
-                  aria-pressed={incidentView === key}
-                  onClick={() => switchRegister(key)}
+                  aria-current={page === key ? "page" : undefined}
+                  onClick={() => {
+                    setSelected(null);
+                    setSearch("");
+                    setNotice("");
+                    setError("");
+                    if (key === "dashboard") setIncidentView("new");
+                  }}
                 >
-                  {register.label}
-                  <span>
-                    {rows.filter((r) => registerFor(r.status) === key).length}
-                  </span>
-                </button>
+                  {section.label}
+                  {key === "resolved" && (
+                    <span>
+                      {rows.filter((r) => r.status === "Resolved").length}
+                    </span>
+                  )}
+                </a>
               ))}
-            </div>
-            <div className="panel incident-panel">
-              <div className="list-heading">
-                <div>
-                  <h2>{registers[incidentView].label}</h2>
-                  <p>{registers[incidentView].description}</p>
+            </nav>
+            {page === "units" && (
+              <>
+                <CapacityOverview
+                  api={api}
+                  refreshKey={fleetVersion}
+                  view="units"
+                />
+                <Fleet api={api} refreshKey={fleetVersion} />
+              </>
+            )}
+            {page === "hospitals" && (
+              <CapacityOverview
+                api={api}
+                refreshKey={fleetVersion}
+                view="hospitals"
+              />
+            )}
+            {page === "dashboard" && (
+              <>
+                <CapacityOverview
+                  api={api}
+                  refreshKey={fleetVersion}
+                  view="summary"
+                />
+                <div className="stats">
+                  {[
+                    ["Total reports", rows.length, "All recorded incidents"],
+                    [
+                      "Awaiting review",
+                      rows.filter((r) => r.status === "Reported").length,
+                      "Newly reported",
+                    ],
+                    [
+                      "In progress",
+                      rows.filter((r) => r.status === "In Progress").length,
+                      "Work underway",
+                    ],
+                    [
+                      "Resolved",
+                      rows.filter((r) => r.status === "Resolved").length,
+                      "Closed incidents",
+                    ],
+                  ].map(([label, n, sub], i) => (
+                    <article key={label}>
+                      <span className={"stat-dot dot-" + i} />
+                      <p>{label}</p>
+                      <strong>{loaded ? n : "—"}</strong>
+                      <small>{sub}</small>
+                    </article>
+                  ))}
                 </div>
-                <span className="count">{shown.length} reports</span>
-              </div>
-              <div className="filters">
-                <label className="search">
-                  Search incidents
-                  <input
-                    aria-label="Search incidents"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search reference, location, or type…"
-                  />
-                </label>
-              </div>
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>REFERENCE / RECEIVED</th>
-                      <th>INCIDENT</th>
-                      <th>LOCATION</th>
-                      <th>STATUS</th>
-                      <th>
-                        <span className="sr-only">Actions</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shown.map((r) => (
-                      <tr key={r.incident_id}>
-                        <td>
-                          <strong>{id(r.incident_id)}</strong>
-                          <small>{date(r.created_at)}</small>
-                        </td>
-                        <td>
-                          <span
-                            className={
-                              "type-icon " + r.emergency_type.toLowerCase()
+              </>
+            )}
+            {(page === "dashboard" || page === "resolved") && (
+              <>
+                {page === "dashboard" && (
+                  <div
+                    className="register-tabs"
+                    role="group"
+                    aria-label="Incident registers"
+                  >
+                    {Object.entries(registers)
+                      .filter(([key]) => key !== "resolved")
+                      .map(([key, register]) => (
+                        <button
+                          key={key}
+                          className={incidentView === key ? "current" : ""}
+                          aria-pressed={incidentView === key}
+                          onClick={() => switchRegister(key)}
+                        >
+                          {register.label}
+                          <span>
+                            {
+                              rows.filter((r) => registerFor(r.status) === key)
+                                .length
                             }
-                          >
-                            {marks[r.emergency_type]}
                           </span>
-                          {r.emergency_type}
-                          <small
-                            className={"severity-" + r.severity.toLowerCase()}
-                          >
-                            {r.severity} severity
-                          </small>
-                        </td>
-                        <td>
-                          {r.address}
-                          <small>{r.city}</small>
-                        </td>
-                        <td>
-                          <span
-                            className={
-                              "badge " + r.status.replace(" ", "").toLowerCase()
-                            }
-                          >
-                            {r.status}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            onClick={() => {
-                              setSelected(r);
-                              setNotice("");
-                            }}
-                          >
-                            Review ↗
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {!shown.length && (
-                <div className="empty">
-                  <h3>
-                    {busy
-                      ? "Loading incidents…"
-                      : registerRows.length
-                        ? "No matching incidents"
-                        : registers[incidentView].empty}
-                  </h3>
-                  <p>
-                    {registerRows.length
-                      ? "Try another search."
-                      : registers[incidentView].hint}
-                  </p>
-                </div>
-              )}
-            </div>
-            {selected && registerFor(selected.status) === incidentView && (
-              <section className="panel detail" aria-label="Incident details">
-                <div className="list-heading">
-                  <div>
-                    <p className="eyebrow">INCIDENT DETAILS</p>
-                    <h2>
-                      {id(selected.incident_id)} · {selected.emergency_type}
-                    </h2>
+                        </button>
+                      ))}
                   </div>
-                  <button onClick={() => setSelected(null)}>
-                    Close details ×
-                  </button>
-                </div>
-                <div className="detail-grid">
-                  <div>
-                    <h3>Situation</h3>
-                    <p className="description">{selected.description}</p>
-                    <h3>Location</h3>
-                    <p>
-                      {selected.address}, {selected.city}
-                    </p>
+                )}
+                <div className="panel incident-panel">
+                  <div className="list-heading">
+                    <div>
+                      <h2>{registers[visibleRegister].label}</h2>
+                      <p>{registers[visibleRegister].description}</p>
+                    </div>
+                    <span className="count">{shown.length} reports</span>
                   </div>
-                  <div>
-                    <h3>Reported by</h3>
-                    <p>
-                      {selected.caller_name}
-                      <br />
-                      {selected.caller_phone}
-                    </p>
-                    <p className="helper">
-                      Received {date(selected.created_at)}
-                      <br />
-                      Updated {date(selected.updated_at)}
-                    </p>
-                    <label>
-                      Manage status
-                      <select
-                        disabled={busy}
-                        value={selected.status}
-                        onChange={(e) => update(selected, e.target.value)}
-                      >
-                        {["Reported", "In Progress", "Resolved"].map((s) => (
-                          <option key={s}>{s}</option>
-                        ))}
-                      </select>
+                  <div className="filters">
+                    <label className="search">
+                      Search incidents
+                      <input
+                        aria-label="Search incidents"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search reference, location, or type…"
+                      />
                     </label>
                   </div>
+                  <div className="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>REFERENCE / RECEIVED</th>
+                          <th>INCIDENT</th>
+                          <th>LOCATION</th>
+                          <th>STATUS</th>
+                          <th>
+                            <span className="sr-only">Actions</span>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {shown.map((r) => (
+                          <tr key={r.incident_id}>
+                            <td>
+                              <strong>{id(r.incident_id)}</strong>
+                              <small>{date(r.created_at)}</small>
+                            </td>
+                            <td>
+                              <span
+                                className={
+                                  "type-icon " + r.emergency_type.toLowerCase()
+                                }
+                              >
+                                {marks[r.emergency_type]}
+                              </span>
+                              {r.emergency_type}
+                              <small
+                                className={
+                                  "severity-" + r.severity.toLowerCase()
+                                }
+                              >
+                                {r.severity} severity
+                              </small>
+                            </td>
+                            <td>
+                              {r.address}
+                              <small>{r.city}</small>
+                            </td>
+                            <td>
+                              <span
+                                className={
+                                  "badge " +
+                                  r.status.replace(" ", "").toLowerCase()
+                                }
+                              >
+                                {r.status}
+                              </span>
+                            </td>
+                            <td>
+                              <button
+                                onClick={() => {
+                                  setSelected(r);
+                                  setNotice("");
+                                }}
+                              >
+                                Review ↗
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {!shown.length && (
+                    <div className="empty">
+                      <h3>
+                        {busy
+                          ? "Loading incidents…"
+                          : registerRows.length
+                            ? "No matching incidents"
+                            : registers[visibleRegister].empty}
+                      </h3>
+                      <p>
+                        {registerRows.length
+                          ? "Try another search."
+                          : registers[visibleRegister].hint}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <DispatchPanel
-                  key={selected.incident_id}
-                  incident={selected}
-                  api={api}
-                  onChange={refresh}
-                />
-              </section>
+                {selected &&
+                  registerFor(selected.status) === visibleRegister && (
+                    <section
+                      className="panel detail"
+                      aria-label="Incident details"
+                    >
+                      <div className="list-heading">
+                        <div>
+                          <p className="eyebrow">INCIDENT DETAILS</p>
+                          <h2>
+                            {id(selected.incident_id)} ·{" "}
+                            {selected.emergency_type}
+                          </h2>
+                        </div>
+                        <button onClick={() => setSelected(null)}>
+                          Close details ×
+                        </button>
+                      </div>
+                      <div className="detail-grid">
+                        <div>
+                          <h3>Situation</h3>
+                          <p className="description">{selected.description}</p>
+                          <h3>Location</h3>
+                          <p>
+                            {selected.address}, {selected.city}
+                          </p>
+                        </div>
+                        <div>
+                          <h3>Reported by</h3>
+                          <p>
+                            {selected.caller_name}
+                            <br />
+                            {selected.caller_phone}
+                          </p>
+                          <p className="helper">
+                            Received {date(selected.created_at)}
+                            <br />
+                            Updated {date(selected.updated_at)}
+                          </p>
+                          <label>
+                            Manage status
+                            <select
+                              disabled={busy}
+                              value={selected.status}
+                              onChange={(e) => update(selected, e.target.value)}
+                            >
+                              {["Reported", "In Progress", "Resolved"].map(
+                                (s) => (
+                                  <option key={s}>{s}</option>
+                                ),
+                              )}
+                            </select>
+                          </label>
+                        </div>
+                      </div>
+                      <DispatchPanel
+                        key={selected.incident_id}
+                        incident={selected}
+                        api={api}
+                        onChange={refresh}
+                      />
+                    </section>
+                  )}
+              </>
             )}
-            <Fleet api={api} refreshKey={fleetVersion} />
           </section>
         )}
       </main>
