@@ -146,9 +146,9 @@ The tests create and remove temporary units/reports. Coverage includes service/c
 The built-in unit locations are now around Nashville, Tennessee (West End, Fort Negley, downtown, and Charlotte Avenue). Fresh installations should run `manage.py seed-units`. Admin credentials are created locally with `manage.py create-admin`; no account password is embedded in the source.
 
 
-## Active and resolved registers
+## New, active, and resolved registers
 
-The admin dashboard opens **Active incidents**, which excludes Resolved cases. **Resolved cases** is a separate register with its own search. Marking a case Resolved moves it there immediately and releases assigned units. Changing a resolved case back to Reported or In Progress returns it to Active incidents. Records remain in PostgreSQL; this is a status-based separation, not deletion.
+The admin dashboard opens **New reports** for Reported cases. **Active incidents** contains In Progress cases (and any legacy open status). **Resolved cases** contains only Resolved cases. The three registers have separate counts and search within the selected register. Starting a response or assigning a unit moves a report to Active incidents; resolving it moves it to Resolved cases. Reopening as Reported returns it to New reports; reopening as In Progress returns it to Active incidents. PostgreSQL records are preserved.
 
 ## Run from GitHub
 

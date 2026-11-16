@@ -1127,3 +1127,11 @@ td button {
     justify-content: center;
   }
 }
+@media (max-width: 680px) {
+  .register-tabs {
+    flex-wrap: wrap;
+  }
+  .register-tabs button {
+    flex: 1 1 130px;
+  }
+}

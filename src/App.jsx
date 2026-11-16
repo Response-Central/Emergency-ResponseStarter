@@ -35,6 +35,31 @@ const date = (value) =>
   });
 const id = (n) => `CER-${String(n).padStart(5, "0")}`;
 
+const registerFor = (status) =>
+  status === "Reported" ? "new" : status === "Resolved" ? "resolved" : "active";
+const registers = {
+  new: {
+    label: "New reports",
+    description:
+      "Newly submitted reports awaiting review. Start a response to move a report to Active incidents.",
+    empty: "No new reports.",
+    hint: "New submissions appear here until work begins.",
+  },
+  active: {
+    label: "Active incidents",
+    description:
+      "Cases with a response underway. Resolve a case to move it to Resolved cases.",
+    empty: "No active incidents.",
+    hint: "Reports move here when marked In Progress or assigned a unit.",
+  },
+  resolved: {
+    label: "Resolved cases",
+    description:
+      "Completed cases are kept here. Reopen a case to return it to the appropriate register.",
+    empty: "No resolved cases yet.",
+    hint: "Cases move here when marked Resolved.",
+  },
+};
 export default function App() {
   const [page, setPage] = useState("home"),
     [user, setUser] = useState(null),
@@ -42,8 +67,7 @@ export default function App() {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [receipt, setReceipt] = useState(null),
-    [filter, setFilter] = useState("All active statuses"),
-    [incidentView, setIncidentView] = useState("active"),
+    [incidentView, setIncidentView] = useState("new"),
     [search, setSearch] = useState(""),
     [selected, setSelected] = useState(null),
     [notice, setNotice] = useState(""),
@@ -163,8 +187,7 @@ export default function App() {
     setError("");
     try {
       await api("/incidents/" + item.incident_id, "PATCH", { status });
-      setIncidentView(status === "Resolved" ? "resolved" : "active");
-      setFilter("All active statuses");
+      setIncidentView(registerFor(status));
       setSearch("");
       setSelected({ ...item, status });
       setNotice(`${id(item.incident_id)} marked ${status.toLowerCase()}.`);
@@ -175,19 +198,16 @@ export default function App() {
       setBusy(false);
     }
   }
-  const registerRows = rows.filter((r) =>
-    incidentView === "resolved"
-      ? r.status === "Resolved"
-      : r.status !== "Resolved",
+  useEffect(() => {
+    if (selected) setIncidentView(registerFor(selected.status));
+  }, [selected?.incident_id, selected?.status]);
+  const registerRows = rows.filter(
+    (r) => registerFor(r.status) === incidentView,
   );
-  const shown = registerRows.filter(
-    (r) =>
-      (incidentView === "resolved" ||
-        filter === "All active statuses" ||
-        r.status === filter) &&
-      `${id(r.incident_id)} ${r.emergency_type} ${r.address} ${r.city}`
-        .toLowerCase()
-        .includes(search.toLowerCase()),
+  const shown = registerRows.filter((r) =>
+    `${id(r.incident_id)} ${r.emergency_type} ${r.address} ${r.city}`
+      .toLowerCase()
+      .includes(search.toLowerCase()),
   );
   const field = (label, name, props = {}) => (
     <label>
@@ -198,7 +218,6 @@ export default function App() {
   function switchRegister(view) {
     setIncidentView(view);
     setSelected(null);
-    setFilter("All active statuses");
     setSearch("");
     setNotice("");
   }
@@ -589,40 +608,25 @@ export default function App() {
               role="group"
               aria-label="Incident registers"
             >
-              <button
-                className={incidentView === "active" ? "current" : ""}
-                aria-pressed={incidentView === "active"}
-                onClick={() => switchRegister("active")}
-              >
-                Active incidents{" "}
-                <span>
-                  {rows.filter((r) => r.status !== "Resolved").length}
-                </span>
-              </button>
-              <button
-                className={incidentView === "resolved" ? "current" : ""}
-                aria-pressed={incidentView === "resolved"}
-                onClick={() => switchRegister("resolved")}
-              >
-                Resolved cases{" "}
-                <span>
-                  {rows.filter((r) => r.status === "Resolved").length}
-                </span>
-              </button>
+              {Object.entries(registers).map(([key, register]) => (
+                <button
+                  key={key}
+                  className={incidentView === key ? "current" : ""}
+                  aria-pressed={incidentView === key}
+                  onClick={() => switchRegister(key)}
+                >
+                  {register.label}
+                  <span>
+                    {rows.filter((r) => registerFor(r.status) === key).length}
+                  </span>
+                </button>
+              ))}
             </div>
             <div className="panel incident-panel">
               <div className="list-heading">
                 <div>
-                  <h2>
-                    {incidentView === "resolved"
-                      ? "Resolved cases"
-                      : "Active incidents"}
-                  </h2>
-                  <p>
-                    {incidentView === "resolved"
-                      ? "Completed cases are kept here. Reopen a case to return it to active incidents."
-                      : "Review open reports and coordinate their response."}
-                  </p>
+                  <h2>{registers[incidentView].label}</h2>
+                  <p>{registers[incidentView].description}</p>
                 </div>
                 <span className="count">{shown.length} reports</span>
               </div>
@@ -636,21 +640,6 @@ export default function App() {
                     placeholder="Search reference, location, or type…"
                   />
                 </label>
-                {incidentView === "active" && (
-                  <label>
-                    Filter status
-                    <select
-                      value={filter}
-                      onChange={(e) => setFilter(e.target.value)}
-                    >
-                      {["All active statuses", "Reported", "In Progress"].map(
-                        (s) => (
-                          <option key={s}>{s}</option>
-                        ),
-                      )}
-                    </select>
-                  </label>
-                )}
               </div>
               <div className="table-wrap">
                 <table>
@@ -722,78 +711,72 @@ export default function App() {
                       ? "Loading incidents…"
                       : registerRows.length
                         ? "No matching incidents"
-                        : incidentView === "resolved"
-                          ? "No resolved cases yet."
-                          : "No active incidents."}
+                        : registers[incidentView].empty}
                   </h3>
                   <p>
                     {registerRows.length
-                      ? "Try another search or status."
-                      : incidentView === "resolved"
-                        ? "Cases move here when marked Resolved."
-                        : "New reports appear here until resolved."}
+                      ? "Try another search."
+                      : registers[incidentView].hint}
                   </p>
                 </div>
               )}
             </div>
-            {selected &&
-              (selected.status === "Resolved") ===
-                (incidentView === "resolved") && (
-                <section className="panel detail" aria-label="Incident details">
-                  <div className="list-heading">
-                    <div>
-                      <p className="eyebrow">INCIDENT DETAILS</p>
-                      <h2>
-                        {id(selected.incident_id)} · {selected.emergency_type}
-                      </h2>
-                    </div>
-                    <button onClick={() => setSelected(null)}>
-                      Close details ×
-                    </button>
+            {selected && registerFor(selected.status) === incidentView && (
+              <section className="panel detail" aria-label="Incident details">
+                <div className="list-heading">
+                  <div>
+                    <p className="eyebrow">INCIDENT DETAILS</p>
+                    <h2>
+                      {id(selected.incident_id)} · {selected.emergency_type}
+                    </h2>
                   </div>
-                  <div className="detail-grid">
-                    <div>
-                      <h3>Situation</h3>
-                      <p className="description">{selected.description}</p>
-                      <h3>Location</h3>
-                      <p>
-                        {selected.address}, {selected.city}
-                      </p>
-                    </div>
-                    <div>
-                      <h3>Reported by</h3>
-                      <p>
-                        {selected.caller_name}
-                        <br />
-                        {selected.caller_phone}
-                      </p>
-                      <p className="helper">
-                        Received {date(selected.created_at)}
-                        <br />
-                        Updated {date(selected.updated_at)}
-                      </p>
-                      <label>
-                        Manage status
-                        <select
-                          disabled={busy}
-                          value={selected.status}
-                          onChange={(e) => update(selected, e.target.value)}
-                        >
-                          {["Reported", "In Progress", "Resolved"].map((s) => (
-                            <option key={s}>{s}</option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
+                  <button onClick={() => setSelected(null)}>
+                    Close details ×
+                  </button>
+                </div>
+                <div className="detail-grid">
+                  <div>
+                    <h3>Situation</h3>
+                    <p className="description">{selected.description}</p>
+                    <h3>Location</h3>
+                    <p>
+                      {selected.address}, {selected.city}
+                    </p>
                   </div>
-                  <DispatchPanel
-                    key={selected.incident_id}
-                    incident={selected}
-                    api={api}
-                    onChange={refresh}
-                  />
-                </section>
-              )}
+                  <div>
+                    <h3>Reported by</h3>
+                    <p>
+                      {selected.caller_name}
+                      <br />
+                      {selected.caller_phone}
+                    </p>
+                    <p className="helper">
+                      Received {date(selected.created_at)}
+                      <br />
+                      Updated {date(selected.updated_at)}
+                    </p>
+                    <label>
+                      Manage status
+                      <select
+                        disabled={busy}
+                        value={selected.status}
+                        onChange={(e) => update(selected, e.target.value)}
+                      >
+                        {["Reported", "In Progress", "Resolved"].map((s) => (
+                          <option key={s}>{s}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+                <DispatchPanel
+                  key={selected.incident_id}
+                  incident={selected}
+                  api={api}
+                  onChange={refresh}
+                />
+              </section>
+            )}
             <Fleet api={api} />
           </section>
         )}
