@@ -176,8 +176,8 @@ docker compose exec backend python manage.py create-admin
 
 | Service | URL |
 |---|---|
-| Frontend | http://127.0.0.1:5173/ |
-| Backend API health check | http://127.0.0.1:5001/api/health |
+| Frontend | http://localhost:8080 |
+| API health check | http://localhost:8080/api/health |
 
 ### 6. Stop Containers
 
@@ -196,6 +196,248 @@ To view logs:
 ```bash
 docker compose logs -f
 ```
+
+
+## How to Run ResponseCentral
+
+ResponseCentral can run locally using Docker Compose, without Docker using separate development servers, or on a local Kubernetes cluster.
+
+### Option 1: Docker Compose (Recommended)
+
+Docker Compose is the easiest way to run the complete application because it starts PostgreSQL, Flask, and React/Nginx together.
+
+**Step 1 — Clone the repository**
+
+```bash
+git clone https://github.com/Response-Central/Emergency-ResponseStarter.git
+cd Emergency-ResponseStarter
+```
+
+**Step 2 — Configure environment variables**
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and configure the required application settings and database credentials.
+
+**Step 3 — Build and start the application**
+
+```bash
+docker compose up -d --build
+```
+
+**Step 4 — Initialize the database**
+
+For a fresh database:
+
+```bash
+docker compose exec backend python manage.py init-db
+```
+
+Optionally, populate demonstration response units and create an administrator:
+
+```bash
+docker compose exec backend python manage.py seed-units
+docker compose exec backend python manage.py create-admin
+```
+
+**Step 5 — Open the application**
+
+Frontend: http://localhost:8080
+
+Backend health check: http://localhost:8080/api/health
+
+**Step 6 — View logs**
+
+```bash
+docker compose logs -f
+```
+
+**Step 7 — Stop the application**
+
+```bash
+docker compose down
+```
+
+---
+
+### Option 2: Local Development
+
+Run the frontend and backend separately for development.
+
+**Step 1 — Install Python dependencies**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Step 2 — Install frontend dependencies**
+
+```bash
+npm install
+```
+
+**Step 3 — Configure PostgreSQL**
+
+Start a local PostgreSQL server and configure the database connection values in `.env`.
+
+Initialize the database:
+
+```bash
+python manage.py init-db
+```
+
+**Step 4 — Start the Flask backend**
+
+In the first terminal:
+
+```bash
+python app.py
+```
+
+The backend must be accessible at:
+
+http://localhost:5001
+
+**Step 5 — Start the React frontend**
+
+Open a second terminal:
+
+```bash
+npm run dev
+```
+
+Open the local URL displayed by Vite, typically:
+
+http://localhost:5173
+
+The Vite development proxy forwards `/api` requests to the Flask backend.
+
+---
+
+### Option 3: Kubernetes
+
+Requires Docker Desktop with Kubernetes enabled and access to the private GHCR container images.
+
+**Step 1 — Verify Kubernetes**
+
+```bash
+kubectl get nodes
+```
+
+**Step 2 — Create the namespace**
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+```
+
+**Step 3 — Configure required secrets**
+
+Create the `postgres-credentials` and `ghcr-credentials` Kubernetes Secrets using valid database credentials and authorized GHCR registry credentials.
+
+Do not commit secret values to GitHub.
+
+**Step 4 — Deploy the application**
+
+```bash
+kubectl apply -f k8s/postgres.yaml
+kubectl apply -f k8s/backend.yaml
+kubectl apply -f k8s/frontend.yaml
+```
+
+**Step 5 — Verify running pods**
+
+```bash
+kubectl get pods -n responsecentral
+```
+
+**Step 6 — Initialize a fresh database**
+
+```bash
+kubectl -n responsecentral exec deployment/backend -- python manage.py init-db
+```
+
+**Step 7 — Access the application**
+
+```bash
+kubectl -n responsecentral port-forward service/frontend 8081:80
+```
+
+Frontend: http://localhost:8081
+
+API health check: http://localhost:8081/api/health
+
+**Step 8 — Troubleshooting**
+
+```bash
+kubectl get pods -n responsecentral
+kubectl logs deployment/backend -n responsecentral
+kubectl logs deployment/frontend -n responsecentral
+```
+
+## System Architecture
+
+ResponseCentral uses a three-tier architecture consisting of a React frontend, Flask REST API, and PostgreSQL database.
+
+### Interactive Architecture Diagram
+
+[View ResponseCentral Architecture on GitDiagram](https://gitdiagram.com/response-central/emergency-responsestarter)
+
+### Architecture Preview
+
+![ResponseCentral Architecture](docs/architecture.png)
+
+The architecture diagram illustrates the repository's code structure and relationships between application components.
+
+### Application Data Flow
+
+```text
+             User / Administrator
+                      |
+                      v
+                 React + Vite
+                      |
+                      v
+                    Nginx
+                      |
+                      v
+                 Flask REST API
+                      |
+                      v
+                 PostgreSQL
+```
+
+### Deployment Architecture
+
+```text
+                  GitHub Repository
+                          |
+                          v
+                    GitHub Actions
+                          |
+               +----------+----------+
+               |                     |
+               v                     v
+          CI Testing            Docker Build
+                                     |
+                                     v
+                              GitHub Container
+                                  Registry
+                                     |
+                                     v
+                            Local Kubernetes
+                                     |
+                         +-----------+-----------+
+                         |           |           |
+                         v           v           v
+                      Frontend     Backend    PostgreSQL
+```
+
+AWS deployment is planned separately using Amazon ECS Fargate, Amazon ECR, and Amazon RDS.
+
 
 ## Kubernetes Deployment
 
