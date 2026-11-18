@@ -1,0 +1,98 @@
+name: ResponseCentral CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: React build and dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build React frontend
+        run: npm run build
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=high
+
+  backend:
+    name: Flask integration tests (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: responsecentral_ci
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_only_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d responsecentral_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_NAME: responsecentral_ci
+      DB_USER: ci_user
+      DB_PASSWORD: ci_only_password
+      COOKIE_SECURE: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install backend dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Initialize isolated database
+        run: python manage.py init-db
+      - name: Run all existing integration suites
+        run: python -m unittest test_integration test_dispatch test_geocoding test_hospitals -v
+      - name: Audit Python dependencies
+        run: |
+          python -m pip install pip-audit
+          python -m pip_audit -r requirements.txt
+
+  docker:
+    name: Docker image build
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Dockerfiles
+        id: dockerfiles
+        run: |
+          if [[ -f Dockerfile.frontend && -f Dockerfile.backend ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Dockerfiles not found; skipping image builds."
+          fi
+
+      - name: Build frontend Docker image
+        if: steps.dockerfiles.outputs.exists == 'true'
+        run: docker build -f Dockerfile.frontend -t responsecentral-frontend:ci .
+
+      - name: Build backend Docker image
+        if: steps.dockerfiles.outputs.exists == 'true'
+        run: docker build -f Dockerfile.backend -t responsecentral-backend:ci .
