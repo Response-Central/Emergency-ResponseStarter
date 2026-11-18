@@ -2,6 +2,8 @@
 
 A polished centralized emergency response **class project**, built on rohanbasnet8/Emergency-ResponseStarter. React 19 + Vite 8 frontend, Flask API, and PostgreSQL. This does not contact or dispatch real emergency services.
 
+[![Architecture diagram of response-central/emergency-responsestarter](https://gitdiagram.com/response-central/emergency-responsestarter/diagram.png)](https://gitdiagram.com/response-central/emergency-responsestarter?utm_source=readme&utm_medium=picture)
+
 ## Requirements
 
 - Node.js 22.12+ (Node 24 LTS recommended), including npm; or pnpm
