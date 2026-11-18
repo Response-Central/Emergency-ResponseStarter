@@ -176,7 +176,7 @@ docker compose exec backend python manage.py create-admin
 
 | Service | URL |
 |---|---|
-| Frontend | http://localhost:8080 |
+| Frontend | http://127.0.0.1:5173/ |
 | Backend API health check | http://localhost:8080/api/health |
 
 ### 6. Stop Containers
