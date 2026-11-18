@@ -1,204 +1,550 @@
-# ResponseCentral
 
-A polished centralized emergency response **class project**, built on rohanbasnet8/Emergency-ResponseStarter. React 19 + Vite 8 frontend, Flask API, and PostgreSQL. This does not contact or dispatch real emergency services.
+# ResponseCentral — Emergency Response Management System
+
+ResponseCentral is a centralized emergency response management system designed to improve the coordination of emergency calls, incidents, response units, and hospitals.
+
+The project demonstrates how database management, full-stack development, containerization, and CI/CD can support emergency response operations.
+
+**Project:** CSCI-4560 Database & System Management  
+**Repository:** https://github.com/Response-Central/Emergency-ResponseStarter
+
+## Project Overview
+
+Emergency response operations require fast access to accurate information. Traditional systems may rely on disconnected databases, manual communication, and delayed updates.
+
+ResponseCentral aims to centralize emergency information and provide a unified platform for managing emergency incidents and available response resources.
+
+### Project Objectives
+
+- Centralize emergency calls and incident information.
+- Track emergency response units and their availability.
+- Support dispatch coordination.
+- Manage hospital information.
+- Improve access to emergency response data.
+- Demonstrate secure database and application development.
+- Implement automated testing and container deployment.
+
+## Technology Stack
+
+| Component | Technology | Purpose |
+|---|---|---|
+| Frontend | React 19, Vite 8 | Web application |
+| Backend | Python, Flask | REST API and business logic |
+| Application Server | Gunicorn | Python application hosting |
+| Database | PostgreSQL 17 | Relational data storage |
+| Web Server | Nginx | Frontend hosting and API proxy |
+| Containerization | Docker | Application packaging |
+| Local Orchestration | Docker Compose | Multi-container development |
+| Orchestration | Kubernetes | Container management |
+| CI/CD | GitHub Actions | Automated testing and publishing |
+| Container Registry | GitHub Container Registry | Docker image storage |
+| Planned Cloud Hosting | AWS ECS Fargate | Managed container hosting |
+| Planned Cloud Database | Amazon RDS | Managed PostgreSQL |
+| Planned Monitoring | Amazon CloudWatch | Logs and monitoring |
+
+## System Architecture
+
+The application follows a three-tier architecture:
+
+```text
+                  USER
+                    |
+                    v
+             React Frontend
+                    |
+                    v
+              Nginx Proxy
+                    |
+                    v
+              Flask REST API
+                    |
+                    v
+             PostgreSQL DB
+```
+
+### Application Components
+
+**Frontend**
+- Provides the user interface.
+- Communicates with the backend through API requests.
+- Uses React and Vite.
+
+**Backend**
+- Processes application requests.
+- Implements business logic.
+- Handles database operations.
+- Exposes REST API endpoints.
+
+**Database**
+- Stores emergency calls, incidents, response units, hospitals, and related records.
+- Uses PostgreSQL for relational data management.
+
+## Database Design
+
+The project models emergency response information through related database entities.
+
+Core concepts include:
+
+- Emergency calls
+- Incidents
+- Response units
+- Incident assignments
+- Hospitals
+- Hospital reservations
+- Locations
+- Administrator accounts and sessions
 
 [![Architecture diagram of response-central/emergency-responsestarter](https://gitdiagram.com/response-central/emergency-responsestarter/diagram.png)](https://gitdiagram.com/response-central/emergency-responsestarter?utm_source=readme&utm_medium=picture)
 
-## Requirements
+The current PostgreSQL implementation contains the following tables:
 
-- Node.js 22.12+ (Node 24 LTS recommended), including npm; or pnpm
-- Python 3.11+ and pip
-- PostgreSQL 17 (other recent PostgreSQL versions should also work)
-
-No Docker or cloud services are required. Run all commands from the extracted project folder.
-
-## 1. Install
-
-PowerShell:
-
-```powershell
-py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-npm install
-Copy-Item .env.example .env
+```text
+adminsession
+adminuser
+emergencycall
+geocodecache
+hospital
+hospitalreservation
+incident
+incidentassignment
+location
+responseunit
 ```
 
-macOS/Linux: use `python3 -m venv .venv`, then `.venv/bin/python` in place of `.\.venv\Scripts\python.exe`, and `cp .env.example .env`.
+The database schema is initialized through the project's Python management script.
 
-Edit `.env` with your own PostgreSQL host, port, database, username, and password. Never commit `.env`. No admin password is bundled in the source or frontend.
+## Getting Started
 
-## 2. Initialize PostgreSQL
+### Prerequisites
 
-Start your local PostgreSQL service. In pgAdmin, create an empty database named `emergency_response_starter`; or run (if PostgreSQL bin is on PATH):
+Install the following software:
 
-```powershell
-createdb -h 127.0.0.1 -U postgres emergency_response_starter
-.\.venv\Scripts\python.exe manage.py init-db
-.\.venv\Scripts\python.exe manage.py create-admin
+- Git
+- Docker Desktop
+- Node.js and npm (for frontend development)
+- Python 3 (for backend development)
+- PostgreSQL (if running the database outside Docker)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Response-Central/Emergency-ResponseStarter.git
+cd Emergency-ResponseStarter
 ```
 
-The admin command prompts for a username and a password (10+ characters, entered twice without echo). Passwords are stored as Werkzeug scrypt hashes. Running it again for the same username resets that password and revokes existing sessions.
+### 2. Configure Environment Variables
 
-`init-db` creates the original tables for an empty database, then applies the rerunnable migration. For an existing starter database, point `.env` to it and run the same command; it retains Location, EmergencyCall, Incident, and ResponseUnit and adds timestamps and auth tables. Back up important databases before migrating. Existing incidents receive the migration time as their initial timestamp because the starter did not record one. Existing unusual status values are retained; the dashboard allows changing them to the supported statuses.
+Copy the example environment file:
 
-Optional sample records: run `database/sample_data.sql` in pgAdmin once, after initialization. It assumes the original example IDs in a fresh database; do not run it on an existing populated database. The app works with an empty register.
-
-## 3. Run
-
-Terminal 1:
-
-```powershell
-.\.venv\Scripts\python.exe app.py
+```bash
+cp .env.example .env
 ```
 
-Terminal 2:
+Update the `.env` file with the appropriate local database credentials and application settings.
 
-```powershell
-npm run dev
+**Security:** Never commit `.env`, passwords, API keys, or access tokens to GitHub.
+
+## Running with Docker Compose
+
+Docker Compose runs the frontend, backend, and PostgreSQL database together.
+
+### 1. Build and Start Containers
+
+```bash
+docker compose up -d --build
 ```
 
-Open http://127.0.0.1:5173 (use this hostname consistently for cookies). API runs on http://127.0.0.1:5001. Vite proxies `/api` to Flask; no CORS configuration is necessary. Keep both terminals open; Ctrl+C stops them. The included `start-backend.cmd` and `start.cmd` run these commands after setup.
+### 2. Initialize the Database
 
-If using pnpm instead, run `pnpm install --frozen-lockfile`, `pnpm dev`, and `pnpm build`. A pnpm lockfile from the source project is retained. Node and package managers must be on PATH.
-
-## Use the app
-
-1. Landing page: choose **Report a problem** or **Admin sign in**.
-2. Public report: enter contact information, location, category, and description. Submission atomically saves a location, emergency call, and incident to PostgreSQL; keep the confirmation reference.
-3. Sign in with the admin you created. The dashboard shows totals, awaiting review, in-progress, and resolved counts.
-4. Search by reference, type, or location; filter by status. Click **Review** to view description and contact information, then choose **Reported**, **In Progress**, or **Resolved**.
-5. Reports, units, and recommendations refresh every ten seconds while the admin dashboard is open. Use Refresh for an immediate update. Theme preference persists in localStorage and initially follows the OS theme. Admin sessions survive reload for up to eight hours; sign out revokes the database session.
-
-There is no public incident list or public contact-information endpoint. Reporting does not require an account. Counts represent all stored reports, not live dispatch metrics. Status/triage edits use last-write-wins, suitable for a small classroom demo. Assignments use database row locks and a unique active-assignment index to prevent double-booking. Assignment history is retained. There is no actual agency integration, GPS feed, road-routing service, or production monitoring.
-
-## Build and verify
-
-```powershell
-npm run build
-.\.venv\Scripts\python.exe -m unittest test_integration -v
+```bash
+docker compose exec backend python manage.py init-db
 ```
 
-Tests require the configured PostgreSQL database and initialized schema, but no running Flask server. They create a uniquely named test admin and temporary report, then remove those rows. PostgreSQL sequence numbers can have gaps. Prefer a separate test database by setting `DB_NAME` in the terminal (environment variables override `.env`). Tests cover report lifecycle and persistence, protected routes, invalid payloads, JSON/cross-site write checks, cookie flags, invalid login, throttling, expiry, and logout revocation.
+### 3. Optional: Seed Response Units
 
-`dist/` contains the production frontend build. `vite preview` alone does not proxy the API; the supported classroom run is the two-server development setup above. A production deployment needs a real WSGI server, HTTPS, and a reverse proxy routing `/api` to Flask and static requests to `dist/`.
-
-## Security and scope
-
-- Server-generated opaque tokens; only SHA-256 token hashes are stored in PostgreSQL.
-- HttpOnly, SameSite=Strict session cookies expire after eight hours. Set `COOKIE_SECURE=true` behind HTTPS; leave false for local HTTP.
-- JSON-only write requests, no permissive CORS, cross-site Fetch Metadata rejection, parameterized SQL, input bounds, and ten login attempts per IP per five minutes.
-- Login throttling is in memory per process and resets on restart; this is an academic starter, not a hardened public emergency platform. Public report abuse prevention, distributed throttling, retention policies, and comprehensive auditing would be needed for public use.
-- The CSS optionally loads Google Fonts; system fonts work offline. No maps, external APIs, or real service credentials are required.
-
-## Files
-
-- `src/App.jsx`, `src/style.css`: responsive landing, report, sign-in, and admin views.
-- `app.py`: validated reports, admin authentication, protected register and status updates.
-- `database.py`: original psycopg2 connection pattern and `.env` loading.
-- `database/schema.sql`: preserved original schema.
-- `database/migration.sql`: additive timestamp and auth tables.
-- `manage.py`: non-destructive initialization and interactive admin setup.
-- `test_integration.py`: PostgreSQL integration checks.
-
-If the database is unavailable, confirm service, `.env`, port, database name and initialization. If sign-in expires, sign in again. If port 5173 or 5001 is occupied, stop the old instance before launching. The UI shows errors and does not claim a report succeeded until PostgreSQL commits it.
-
-
-## Dispatch and automatic address lookup
-
-Upgrade an existing checkout without losing reports:
-
-```powershell
-.\.venv\Scripts\python.exe manage.py init-db
-.\.venv\Scripts\python.exe manage.py seed-units
+```bash
+docker compose exec backend python manage.py seed-units
 ```
 
-Restart Flask after upgrading. Vite reloads frontend changes automatically. `seed-units` adds 18 response units around Nashville, Tennessee (6 ambulances, 6 fire engines, and 6 police units), and one example incident if absent; the older `seed-dispatch-demo` command remains an alias. Existing bundled names are cleaned by the migration; submitted user records are retained. The units are for this academic project; the system has no actual emergency-service connection.
+### 4. Create an Administrator
 
-### Assign from the reported address
-
-1. Open **Review** on an incident. The assignment panel automatically searches the street address and city supplied in the report. There is no latitude/longitude entry in the website.
-2. One precise result is saved automatically. If the lookup returns several matches, select the correct address. The matched address is displayed in the panel. A missing, ambiguous, or unavailable lookup blocks assignment and does not substitute random coordinates. Correct incomplete addresses with the reporter before proceeding.
-3. Set severity to Low, Moderate, High, or Critical and click **Save severity**. This preserves the matched location.
-4. The app matches Medical → Ambulance, Fire → Fire, Police → Police; Other permits manual selection across services. Unit capability must meet severity. Suitable available units with saved locations are ranked by Haversine straight-line distance, not road distance or ETA. The nearest eligible unit is labeled.
-5. Click **Assign unit**. The incident becomes In Progress. Database row locks and a unique active-assignment index prevent double-booking. Several units can serve one incident; each unit has at most one active assignment.
-6. **Release unit** retains history and leaves the incident open. **Resolved** releases all its units. Offline units remain offline after release. Reopen resolved incidents before making a new assignment.
-7. Under **Units & availability**, update a unit using its **Current address**, not coordinates. Choose a matching location if needed and save again. Saving updates its location and timestamp. New units use the same address-based flow. An assigned unit remains occupied even if its availability is set to Available.
-
-The dashboard polls every ten seconds. Unit locations represent saved addresses; there is no GPS tracking or automatic vehicle movement. Saved coordinates remain usable regardless of age; save each unit's current address when its location changes.
-
-### Geocoding service and privacy
-
-The backend uses OpenStreetMap Nominatim: https://nominatim.org/release-docs/latest/api/Search/
-
-Only the address and city are sent to this third-party lookup service; names, phone numbers, severity, and incident descriptions are not sent. Do not use this academic starter to submit confidential addresses to the public service. See the service policy: https://operations.osmfoundation.org/policies/nominatim/ . Results are attributed in the website, cached in PostgreSQL for 30 days, and requests are serialized with a PostgreSQL advisory lock and spaced at least a second apart. No autocomplete or bulk background geocoding is used. Successful incident matches are retained and reused. Area-only matches such as a city or postal code are excluded.
-
-Internet access is required for uncached addresses. Provider failures or no precise matches show an error; report submission and other admin functions still work. No API key is required for the default small local configuration. Set `GEOCODER_URL` to an equivalent Nominatim-compatible endpoint and `GEOCODER_USER_AGENT` to your application's identifying user agent when changing providers. For production or confidential data, use an appropriate authorized geocoding service instead.
-
-### Verification
-
-```powershell
-npm run build
-.\.venv\Scripts\python.exe -m unittest test_dispatch.DispatchIntegration test_geocoding.AddressIntegration -v
+```bash
+docker compose exec backend python manage.py create-admin
 ```
 
-The tests create and remove temporary units/reports. Coverage includes service/capability matching, saved locations and offline units, assignment conflicts, release, auto-release on resolution, address matching, ambiguity selection, invalid selection, severity-only updates, unit address saves, lookup failure, and caching. Provider responses are mocked in automated tests; the default provider was also checked manually with public landmark addresses.
+### 5. Access the Application
 
-`dispatch.py` implements dispatch routes, `geocoding.py` handles the provider and cache, and `src/Dispatch.jsx` contains the assignment and fleet views. `database/migration.sql` extends the original tables additively. The API retains validated coordinate support for existing integrations, while website users work with addresses. Incident assignments require a location matched to the current reported address.
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:8080 |
+| Backend API health check | http://localhost:8080/api/health |
 
-The built-in unit locations are now around Nashville, Tennessee (West End, Fort Negley, downtown, and Charlotte Avenue). Fresh installations should run `manage.py seed-units`. Admin credentials are created locally with `manage.py create-admin`; no account password is embedded in the source.
+### 6. Stop Containers
 
-
-## New, active, and resolved registers
-
-The admin dashboard opens **New reports** for Reported cases. **Active incidents** contains In Progress cases (and any legacy open status). **Resolved cases** contains only Resolved cases. The three registers have separate counts and search within the selected register. Starting a response or assigning a unit moves a report to Active incidents; resolving it moves it to Resolved cases. Reopening as Reported returns it to New reports; reopening as In Progress returns it to Active incidents. PostgreSQL records are preserved.
-
-## Run from GitHub
-
-Clone the repository, then follow the Install, PostgreSQL, and Run steps above. The repository includes the React/Vite source, Python API, dependency manifests and pnpm lockfile, database schema and additive migrations, admin/setup utilities, launch scripts, tests, and `.env.example`. Create your own local `.env`, initialize PostgreSQL with `manage.py init-db`, load Nashville units with `manage.py seed-units`, and create your admin using `manage.py create-admin`. Local passwords, database contents, virtual environments, and node_modules are intentionally excluded; they are created during setup.
-
-
-## Expand the fleet / release units
-
-Run `python manage.py seed-units` (using your virtualenv Python) after `manage.py init-db` to add the full Nashville fleet from `database/response_units.json`. It adds missing unit names only: existing locations, availability, and assignments are preserved. Repeating the command does not duplicate the units. Units may share a base address. New entries start with a saved location timestamp. Saved addresses do not expire; update each unit’s address when it moves.
-
-Resolving an incident releases **all** of its active unit assignments in the same PostgreSQL transaction as the status change. The confirmation displays the released count and the fleet refreshes immediately. Available units can then be reassigned; a unit deliberately marked Offline remains Offline. Assignment history is preserved. Rerunning `manage.py init-db` also releases any leftover active assignments on older already-resolved incidents.
-
-
-## Assignment availability fix
-
-Saved unit locations no longer expire after fifteen minutes. This app stores manually maintained unit addresses, so age alone does not make an available unit unassignable. The timestamp is retained unchanged and displayed as the last saved location time. Distance remains an estimate from that location, not live GPS. Assignment still rejects busy or offline units, incompatible services, insufficient capability, unresolved incident addresses, missing coordinates, and resolved incidents. No synthetic location refresh or timestamp update is used to enable assignment.
-
-
-## Available units and hospital capacity
-
-The dashboard shows compact unit and bed availability totals. **Units & availability** contains fleet management and service counts. **Hospitals & beds** contains the detailed hospital available, occupied, reserved, and total bed counts. These refresh immediately after assignments/resolution and every ten seconds while the dashboard is open.
-
-Five configured Nashville-area hospital entries are provided in `database/hospitals.json`: Midtown Community (40 beds), Eastbank General (32), South Nashville Medical (28), North River (24), and Antioch Regional (36). These are made-up teaching locations and configured capacities, not real hospital availability. Their starting occupied counts total 69, leaving 91 of 160 receiving beds available before incident reservations. `manage.py init-db` creates the new tables and inserts missing hospitals without overwriting saved capacity.
-
-Assigning an **Ambulance** automatically reserves one receiving bed at the nearest hospital **to the incident location** that has capacity. It uses straight-line distance, not travel time or clinical suitability. Multiple ambulances serving the same incident share its one-bed reservation; this model assumes one patient per incident. Police and fire assignments do not reserve hospital beds. The selected destination and reserved bed appear in the incident details.
-
-Capacity is checked transactionally with hospital row locks. If every hospital is full, the request fails clearly and neither the ambulance assignment nor a reservation is saved. An existing active hospital reservation on the same incident is reused. Resolved incidents release their bed and assigned units together; manually releasing a unit alone leaves the receiving bed reserved until the incident is resolved. Reservation history is kept and reopening does not automatically re-reserve a bed until an ambulance is assigned again.
-
-Under each hospital's **Manage beds**, admins may update total receiving beds and the baseline occupied count (excluding active reservations). The backend rejects values that would exceed capacity after reservations are included. This is reservation accounting for the class project, not a real-time inpatient census or a clinical destination-selection system.
-
-Files: `hospitals.py` implements capacity APIs and nearest-hospital reservation; `src/Capacity.jsx` implements the dashboard overview. Hospital tables and indexes are in the additive migration. The protected `GET /api/capacity` supplies unit/hospital totals; `PATCH /api/hospitals/<id>` saves validated bed counts.
-
-Run all integration suites:
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest test_dispatch.DispatchIntegration test_geocoding.AddressIntegration test_hospitals.HospitalIntegration -v
+```bash
+docker compose down
 ```
 
-Hospital tests use isolated test hospital rows and clean them afterward. They cover nearest selection, full-hospital fallback, one bed per incident, all-full rollback, capacity-edit protection, resolution release, no beds for police, authentication, and a concurrent race for the final available bed.
+To inspect running containers:
 
+```bash
+docker compose ps
+```
 
-## Separate admin pages
+To view logs:
 
-Use the navigation beneath the admin page heading:
+```bash
+docker compose logs -f
+```
 
-- **Dashboard** (`/#dashboard`): compact availability summaries, incident totals, New reports, and Active incidents. Detailed fleet and hospital management are on their own pages.
-- **Units & availability** (`/#units`): unit availability summary, all response units, saved address/availability updates, and unit creation.
-- **Hospitals & beds** (`/#hospitals`): hospital receiving capacity and per-hospital bed management.
-- **Resolved cases** (`/#resolved`): completed-case search and details, with the option to reopen a case.
+## Kubernetes Deployment
 
-The URL hash keeps the selected page on refresh, supports direct links and browser Back/Forward, and works without server rewrite rules. Admin session checks still protect every private page. Resolving a case opens Resolved cases; reopening moves to the appropriate dashboard register. Unit assignment and hospital reservations remain in incident details. Counts and resource lists continue to refresh on each page.
+ResponseCentral also supports deployment to a local Kubernetes cluster using Docker Desktop.
+
+### Kubernetes Configuration Files
+
+```text
+k8s/
+├── namespace.yaml
+├── postgres.yaml
+├── backend.yaml
+└── frontend.yaml
+```
+
+| File | Description |
+|---|---|
+| namespace.yaml | Creates the ResponseCentral namespace |
+| postgres.yaml | PostgreSQL StatefulSet, storage, and service |
+| backend.yaml | Flask backend Deployment and service |
+| frontend.yaml | React frontend Deployment and service |
+
+### 1. Enable Kubernetes
+
+Enable Kubernetes in Docker Desktop.
+
+Verify that the cluster is available:
+
+```bash
+kubectl get nodes
+```
+
+### 2. Create the Namespace
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+```
+
+### 3. Configure Kubernetes Secrets
+
+The deployment requires secrets for PostgreSQL credentials and access to the private GitHub Container Registry images.
+
+Required secret names:
+
+```text
+postgres-credentials
+ghcr-credentials
+```
+
+Create these secrets securely before applying the workload manifests.
+
+Do not store real passwords or registry tokens in the repository.
+
+### 4. Deploy Application Services
+
+```bash
+kubectl apply -f k8s/postgres.yaml
+kubectl apply -f k8s/backend.yaml
+kubectl apply -f k8s/frontend.yaml
+```
+
+### 5. Verify Deployment
+
+```bash
+kubectl get pods -n responsecentral
+kubectl get services -n responsecentral
+```
+
+Check the rollout:
+
+```bash
+kubectl rollout status deployment/backend -n responsecentral
+kubectl rollout status deployment/frontend -n responsecentral
+```
+
+For a new database, initialize the schema using the backend management script before using database-dependent application features.
+
+### 6. Access the Application
+
+```bash
+kubectl -n responsecentral port-forward service/frontend 8081:80
+```
+
+Open:
+
+http://localhost:8081
+
+Verify the API:
+
+```bash
+curl http://localhost:8081/api/health
+```
+
+Expected response:
+
+```json
+{
+  "message": "Python API is running"
+}
+```
+
+### Kubernetes Deployment Status
+
+The local Kubernetes deployment has been verified with:
+
+- PostgreSQL running successfully.
+- Flask backend running successfully.
+- React frontend running successfully.
+- Backend health endpoint returning HTTP 200.
+- Database schema initialized successfully.
+
+## Docker Container Images
+
+GitHub Actions builds and publishes two Docker images.
+
+**Frontend:**
+
+```text
+ghcr.io/response-central/responsecentral-frontend:latest
+```
+
+**Backend:**
+
+```text
+ghcr.io/response-central/responsecentral-backend:latest
+```
+
+Both images support:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+The images are published to GitHub Container Registry and may require authentication to pull.
+
+## CI/CD Pipeline
+
+ResponseCentral uses GitHub Actions for continuous integration and container publishing.
+
+### Continuous Integration
+
+Workflow:
+
+```text
+.github/workflows/ci.yml
+```
+
+The CI pipeline performs:
+
+1. Frontend dependency installation.
+2. React production build.
+3. npm security audit.
+4. Backend integration testing with PostgreSQL.
+5. Python dependency security audit.
+6. Docker image build verification.
+
+### Container Publishing
+
+Workflow:
+
+```text
+.github/workflows/publish.yml
+```
+
+The publishing pipeline:
+
+1. Authenticates with GitHub Container Registry.
+2. Builds Docker images using Docker Buildx.
+3. Produces AMD64 and ARM64 images.
+4. Publishes frontend and backend images.
+5. Tags images with `latest` and the Git commit SHA.
+
+### CI/CD Architecture
+
+```text
+Developer
+    |
+    v
+GitHub Repository
+    |
+    v
+GitHub Actions
+    |
+    +------------------------+
+    |                        |
+    v                        v
+Frontend Checks         Backend Checks
+    |                        |
+    +-----------+------------+
+                |
+                v
+          Docker Build
+                |
+                v
+      GitHub Container Registry
+                |
+                v
+       Kubernetes Deployment
+          (local cluster)
+```
+
+Kubernetes deployment is currently performed separately from the image-publishing workflow.
+
+## AWS Cloud Deployment (In Progress)
+
+The planned AWS deployment will use managed cloud services to host ResponseCentral.
+
+### Proposed AWS Architecture
+
+```text
+                 Internet
+                    |
+                    v
+        Application Load Balancer
+                    |
+          +---------+---------+
+          |                   |
+          v                   v
+    Frontend Service     Backend Service
+     ECS Fargate          ECS Fargate
+                              |
+                              v
+                      Amazon RDS
+                       PostgreSQL
+```
+
+### Planned AWS Services
+
+| AWS Service | Purpose |
+|---|---|
+| Amazon ECR | Container image registry |
+| Amazon ECS | Container orchestration |
+| AWS Fargate | Serverless container compute |
+| Amazon RDS | Managed PostgreSQL database |
+| Application Load Balancer | HTTP/HTTPS traffic routing |
+| AWS Secrets Manager | Secure application secrets |
+| Amazon CloudWatch | Logging and monitoring |
+| AWS IAM | Identity and access management |
+| GitHub Actions OIDC | Secure CI/CD authentication |
+
+### Deployment Status
+
+**AWS deployment is currently in progress.**
+
+The application has already been tested locally using Docker Compose and Kubernetes.
+
+AWS infrastructure will be provisioned and verified separately.
+
+## Security
+
+ResponseCentral incorporates application and infrastructure security considerations.
+
+### Application Security
+
+- Administrator authentication and session management.
+- Password hashing.
+- Parameterized database queries.
+- Input validation.
+- Protected administrative endpoints.
+- Environment-based configuration.
+
+### Infrastructure Security
+
+- Secrets excluded from source control.
+- Kubernetes Secrets for sensitive configuration.
+- Container vulnerability checks.
+- Dependency security audits.
+- IAM-based AWS access control.
+- Planned HTTPS and encrypted cloud storage.
+- Planned monitoring and restricted network access.
+
+### Data Privacy
+
+ResponseCentral is an academic demonstration project.
+
+The system should use synthetic or non-sensitive demonstration data. It is not intended for live emergency dispatch or the storage of real patient information without additional security, operational, and regulatory safeguards.
+
+**HIPAA compliance has not been established.**
+
+## Testing and Verification
+
+The project uses several verification methods:
+
+| Component | Verification |
+|---|---|
+| React frontend | `npm run build` |
+| JavaScript dependencies | `npm audit --audit-level=high` |
+| Python dependencies | `pip-audit` |
+| Backend | Automated Python tests |
+| Database | PostgreSQL schema verification |
+| Docker | Container build and startup |
+| Kubernetes | Pod and rollout status |
+| API | `/api/health` endpoint |
+| CI/CD | GitHub Actions workflow results |
+
+## Project Structure
+
+```text
+Emergency-ResponseStarter/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── publish.yml
+├── database/
+├── k8s/
+│   ├── namespace.yaml
+│   ├── postgres.yaml
+│   ├── backend.yaml
+│   └── frontend.yaml
+├── src/
+├── app.py
+├── manage.py
+├── database.py
+├── dispatch.py
+├── geocoding.py
+├── hospitals.py
+├── compose.yaml
+├── Dockerfile.backend
+├── Dockerfile.frontend
+├── nginx.conf
+├── package.json
+├── package-lock.json
+├── requirements.txt
+├── vite.config.js
+├── .env.example
+└── README.md
+```
+
+## Future Improvements
+
+Potential future enhancements include:
+
+- AWS production-style deployment.
+- Automated deployment through GitHub Actions.
+- Improved response-unit availability tracking.
+- Real-time incident updates.
+- Database query and caching optimization.
+- Additional monitoring and audit logging.
+- Hospital capacity integration.
+- Enhanced role-based access control.
+- Automated database backup and recovery.
+
+## Disclaimer
+
+ResponseCentral is developed for educational and demonstration purposes.
+
+It is not an official emergency dispatch system and should not be relied upon for real-world emergency response.
+
+## Repository
+
+**GitHub:** https://github.com/Response-Central/Emergency-ResponseStarter
