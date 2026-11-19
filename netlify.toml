@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "http://responsecentral-alb-247820225.us-east-2.elb.amazonaws.com/api/:splat"
+  to = "https://deymxwq1cqw7d.cloudfront.net/api/:splat"
   status = 200
   force = true
 
