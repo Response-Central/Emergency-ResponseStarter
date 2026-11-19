@@ -1,25 +1,21 @@
-
 # ResponseCentral — Emergency Response Management System
 
-ResponseCentral is a centralized emergency response management system designed to improve the coordination of emergency calls, incidents, response units, and hospitals.
+ResponseCentral is a centralized emergency response management system designed to improve coordination of emergency calls, incidents, response units, and hospitals. The project demonstrates how database management, full-stack development, containerization, and CI/CD can support emergency response operations.
 
-The project demonstrates how database management, full-stack development, containerization, and CI/CD can support emergency response operations.
-
-**Project:** CSCI-4560 Database & System Management  
-**Repository:** https://github.com/Response-Central/Emergency-ResponseStarter
+**Course:** CSCI-4560 Database & System Management  
+**Repository:** [Response-Central/Emergency-ResponseStarter](https://github.com/Response-Central/Emergency-ResponseStarter)  
+**Interactive code architecture:** [Explore ResponseCentral on GitDiagram](https://gitdiagram.com/response-central/emergency-responsestarter)
 
 ## Project Overview
 
-Emergency response operations require fast access to accurate information. Traditional systems may rely on disconnected databases, manual communication, and delayed updates.
-
-ResponseCentral aims to centralize emergency information and provide a unified platform for managing emergency incidents and available response resources.
+Emergency response operations require fast access to accurate information. Disconnected systems, manual communication, and delayed updates can make coordination more difficult. ResponseCentral aims to provide a unified platform for emergency incidents and response resources.
 
 ### Project Objectives
 
 - Centralize emergency calls and incident information.
 - Track emergency response units and their availability.
-- Support dispatch coordination.
-- Manage hospital information.
+- Support dispatch coordination and incident assignments.
+- Manage hospital information and reservations.
 - Improve access to emergency response data.
 - Demonstrate secure database and application development.
 - Implement automated testing and container deployment.
@@ -30,243 +26,150 @@ ResponseCentral aims to centralize emergency information and provide a unified p
 |---|---|---|
 | Frontend | React 19, Vite 8 | Web application |
 | Backend | Python, Flask | REST API and business logic |
-| Application Server | Gunicorn | Python application hosting |
+| Application server | Gunicorn | Python application hosting |
 | Database | PostgreSQL 17 | Relational data storage |
-| Web Server | Nginx | Frontend hosting and API proxy |
+| Web server | Nginx | Frontend hosting and API reverse proxy |
 | Containerization | Docker | Application packaging |
-| Local Orchestration | Docker Compose | Multi-container development |
-| Orchestration | Kubernetes | Container management |
-| CI/CD | GitHub Actions | Automated testing and publishing |
-| Container Registry | GitHub Container Registry | Docker image storage |
-| Planned Cloud Hosting | AWS ECS Fargate | Managed container hosting |
-| Planned Cloud Database | Amazon RDS | Managed PostgreSQL |
-| Planned Monitoring | Amazon CloudWatch | Logs and monitoring |
+| Local orchestration | Docker Compose | Multi-container development |
+| Kubernetes | Docker Desktop Kubernetes | Local container orchestration |
+| CI/CD | GitHub Actions | Automated checks and image publishing |
+| Container registry | GitHub Container Registry (GHCR) | Published Docker images |
+| Planned cloud hosting | AWS ECS Fargate | Managed container hosting |
+| Planned cloud database | Amazon RDS | Managed PostgreSQL |
+| Planned cloud monitoring | Amazon CloudWatch | Logs and monitoring |
 
 ## System Architecture
 
-The application follows a three-tier architecture:
+ResponseCentral follows a three-tier architecture: a React frontend, a Flask REST API, and a PostgreSQL database. Nginx serves the production frontend and proxies API requests to Flask.
 
-```text
-                  USER
-                    |
-                    v
-             React Frontend
-                    |
-                    v
-              Nginx Proxy
-                    |
-                    v
-              Flask REST API
-                    |
-                    v
-             PostgreSQL DB
+### Application Data Flow
+
+```mermaid
+flowchart TD
+    U["User / Administrator"] --> F["React + Vite Frontend"]
+    F --> N["Nginx Web Server / API Proxy"]
+    N --> A["Flask REST API / Gunicorn"]
+    A --> DB[("PostgreSQL 17")]
+
+    classDef client fill:#244a6b,color:#fff,stroke:#6f9fc4
+    classDef service fill:#315d65,color:#fff,stroke:#83bdb4
+    classDef database fill:#594b83,color:#fff,stroke:#b7a6e2
+    class U,F client
+    class N,A service
+    class DB database
 ```
 
 ### Application Components
 
-**Frontend**
-- Provides the user interface.
-- Communicates with the backend through API requests.
-- Uses React and Vite.
+**Frontend:** Provides the user interface using React and Vite, and communicates with the backend through API requests.
 
-**Backend**
-- Processes application requests.
-- Implements business logic.
-- Handles database operations.
-- Exposes REST API endpoints.
+**Backend:** Handles application requests, business logic, database operations, and REST API endpoints using Flask. Gunicorn serves the backend in the containerized deployment.
 
-**Database**
-- Stores emergency calls, incidents, response units, hospitals, and related records.
-- Uses PostgreSQL for relational data management.
+**Database:** Uses PostgreSQL to store emergency calls, incidents, response units, hospitals, and related information.
+
+### Interactive Repository Architecture
+
+[**Open the ResponseCentral architecture on GitDiagram**](https://gitdiagram.com/response-central/emergency-responsestarter)
+
+GitDiagram provides an interactive view of the repository's code structure and component relationships. This external link is used instead of an unverified image URL, so the README does not display a broken image placeholder.
 
 ## Database Design
 
-The project models emergency response information through related database entities.
+The current PostgreSQL implementation includes the following tables:
 
-Core concepts include:
+| Table | General purpose |
+|---|---|
+| `adminuser` | Administrator accounts |
+| `adminsession` | Administrator sessions |
+| `emergencycall` | Incoming emergency calls |
+| `incident` | Emergency incidents |
+| `incidentassignment` | Assignments of response resources to incidents |
+| `responseunit` | Emergency response units |
+| `hospital` | Hospital information |
+| `hospitalreservation` | Hospital reservations |
+| `location` | Location information |
+| `geocodecache` | Cached geocoding results |
 
-- Emergency calls
-- Incidents
-- Response units
-- Incident assignments
-- Hospitals
-- Hospital reservations
-- Locations
-- Administrator accounts and sessions
-
-[![Architecture diagram of response-central/emergency-responsestarter](https://gitdiagram.com/response-central/emergency-responsestarter/diagram.png)](https://gitdiagram.com/response-central/emergency-responsestarter?utm_source=readme&utm_medium=picture)
-
-The current PostgreSQL implementation contains the following tables:
-
-```text
-adminsession
-adminuser
-emergencycall
-geocodecache
-hospital
-hospitalreservation
-incident
-incidentassignment
-location
-responseunit
-```
-
-The database schema is initialized through the project's Python management script.
+The database schema is initialized using `python manage.py init-db` in the appropriate backend environment. For the exact keys, constraints, and relationships, see the schema files in [`database/`](database/).
 
 ## Getting Started
 
 ### Prerequisites
 
-Install the following software:
+- **Git** to clone the repository.
+- **Docker Desktop** for the recommended local deployment.
+- **Node.js and npm** for standalone frontend development.
+- **Python 3** for standalone backend development.
+- **PostgreSQL** if running the database outside Docker.
+- **kubectl and a local Kubernetes cluster** only for the Kubernetes option.
 
-- Git
-- Docker Desktop
-- Node.js and npm (for frontend development)
-- Python 3 (for backend development)
-- PostgreSQL (if running the database outside Docker)
-
-### 1. Clone the Repository
+### Clone the Repository
 
 ```bash
 git clone https://github.com/Response-Central/Emergency-ResponseStarter.git
 cd Emergency-ResponseStarter
 ```
 
-### 2. Configure Environment Variables
-
-Copy the example environment file:
+### Configure Environment Variables
 
 ```bash
 cp .env.example .env
 ```
 
-Update the `.env` file with the appropriate local database credentials and application settings.
+Edit `.env` to provide the required application settings and local database credentials. **Never commit `.env`, passwords, API keys, or access tokens to GitHub.**
 
-**Security:** Never commit `.env`, passwords, API keys, or access tokens to GitHub.
+## How to Run ResponseCentral
 
-## Running with Docker Compose
+### Option 1: Docker Compose (Recommended)
 
-Docker Compose runs the frontend, backend, and PostgreSQL database together.
+Docker Compose starts PostgreSQL, the Flask backend, and the React frontend served by Nginx.
 
-### 1. Build and Start Containers
+**1. Build and start the containers**
 
 ```bash
 docker compose up -d --build
 ```
 
-### 2. Initialize the Database
+**2. Initialize the database (first run / fresh database)**
 
 ```bash
 docker compose exec backend python manage.py init-db
 ```
 
-### 3. Optional: Seed Response Units
+**3. Optionally seed response units and create an administrator**
 
 ```bash
 docker compose exec backend python manage.py seed-units
-```
-
-### 4. Create an Administrator
-
-```bash
 docker compose exec backend python manage.py create-admin
 ```
 
-### 5. Access the Application
+**4. Open the application**
 
 | Service | URL |
 |---|---|
 | Frontend | http://localhost:8080 |
 | API health check | http://localhost:8080/api/health |
 
-### 6. Stop Containers
-
-```bash
-docker compose down
-```
-
-To inspect running containers:
+**5. Inspect status or logs**
 
 ```bash
 docker compose ps
-```
-
-To view logs:
-
-```bash
 docker compose logs -f
 ```
 
-
-## How to Run ResponseCentral
-
-ResponseCentral can run locally using Docker Compose, without Docker using separate development servers, or on a local Kubernetes cluster.
-
-### Option 1: Docker Compose (Recommended)
-
-Docker Compose is the easiest way to run the complete application because it starts PostgreSQL, Flask, and React/Nginx together.
-
-**Step 1 — Clone the repository**
-
-```bash
-git clone https://github.com/Response-Central/Emergency-ResponseStarter.git
-cd Emergency-ResponseStarter
-```
-
-**Step 2 — Configure environment variables**
-
-```bash
-cp .env.example .env
-```
-
-Open `.env` and configure the required application settings and database credentials.
-
-**Step 3 — Build and start the application**
-
-```bash
-docker compose up -d --build
-```
-
-**Step 4 — Initialize the database**
-
-For a fresh database:
-
-```bash
-docker compose exec backend python manage.py init-db
-```
-
-Optionally, populate demonstration response units and create an administrator:
-
-```bash
-docker compose exec backend python manage.py seed-units
-docker compose exec backend python manage.py create-admin
-```
-
-**Step 5 — Open the application**
-
-Frontend: http://localhost:8080
-
-Backend health check: http://localhost:8080/api/health
-
-**Step 6 — View logs**
-
-```bash
-docker compose logs -f
-```
-
-**Step 7 — Stop the application**
+**6. Stop the application**
 
 ```bash
 docker compose down
 ```
 
----
+`docker compose down` stops and removes the Compose containers and network; it does not remove named database volumes unless you explicitly request volume removal.
 
-### Option 2: Local Development
+### Option 2: Local Development (Without Docker for the App)
 
-Run the frontend and backend separately for development.
+This option runs the frontend and backend separately and requires an accessible PostgreSQL server.
 
-**Step 1 — Install Python dependencies**
+**1. Create a Python virtual environment and install backend dependencies**
 
 ```bash
 python3 -m venv .venv
@@ -274,73 +177,57 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**Step 2 — Install frontend dependencies**
+**2. Install frontend dependencies**
 
 ```bash
 npm install
 ```
 
-**Step 3 — Configure PostgreSQL**
+**3. Configure PostgreSQL**
 
-Start a local PostgreSQL server and configure the database connection values in `.env`.
-
-Initialize the database:
+Start PostgreSQL, create/configure the database as needed, and update the database connection values in `.env`. Initialize the schema:
 
 ```bash
 python manage.py init-db
 ```
 
-**Step 4 — Start the Flask backend**
-
-In the first terminal:
+**4. Start the backend (terminal 1)**
 
 ```bash
 python app.py
 ```
 
-The backend must be accessible at:
+The backend should be accessible at http://localhost:5001.
 
-http://localhost:5001
-
-**Step 5 — Start the React frontend**
-
-Open a second terminal:
+**5. Start the frontend (terminal 2)**
 
 ```bash
 npm run dev
 ```
 
-Open the local URL displayed by Vite, typically:
+Open the URL displayed by Vite, typically http://localhost:5173. The Vite development proxy forwards `/api` requests to the Flask backend.
 
-http://localhost:5173
+### Option 3: Local Kubernetes
 
-The Vite development proxy forwards `/api` requests to the Flask backend.
+Requires Docker Desktop Kubernetes, `kubectl`, and access to the private GHCR images. The manifests are in [`k8s/`](k8s/).
 
----
-
-### Option 3: Kubernetes
-
-Requires Docker Desktop with Kubernetes enabled and access to the private GHCR container images.
-
-**Step 1 — Verify Kubernetes**
+**1. Check your cluster and create the namespace**
 
 ```bash
 kubectl get nodes
-```
-
-**Step 2 — Create the namespace**
-
-```bash
 kubectl apply -f k8s/namespace.yaml
 ```
 
-**Step 3 — Configure required secrets**
+**2. Configure Kubernetes Secrets**
 
-Create the `postgres-credentials` and `ghcr-credentials` Kubernetes Secrets using valid database credentials and authorized GHCR registry credentials.
+The deployment expects two existing Secrets in the `responsecentral` namespace:
 
-Do not commit secret values to GitHub.
+- `postgres-credentials`: PostgreSQL credentials required by the manifests.
+- `ghcr-credentials`: Docker registry pull credentials for the private GHCR images.
 
-**Step 4 — Deploy the application**
+Create these using authorized credentials and the secret keys required by the YAML manifests. Do not commit secret values or a registry token to the repository.
+
+**3. Deploy PostgreSQL, backend, and frontend**
 
 ```bash
 kubectl apply -f k8s/postgres.yaml
@@ -348,29 +235,30 @@ kubectl apply -f k8s/backend.yaml
 kubectl apply -f k8s/frontend.yaml
 ```
 
-**Step 5 — Verify running pods**
+**4. Verify the deployment**
 
 ```bash
 kubectl get pods -n responsecentral
+kubectl get services -n responsecentral
+kubectl rollout status deployment/backend -n responsecentral
+kubectl rollout status deployment/frontend -n responsecentral
 ```
 
-**Step 6 — Initialize a fresh database**
+**5. Initialize a fresh database**
 
 ```bash
 kubectl -n responsecentral exec deployment/backend -- python manage.py init-db
 ```
 
-**Step 7 — Access the application**
+**6. Access the application**
 
 ```bash
 kubectl -n responsecentral port-forward service/frontend 8081:80
 ```
 
-Frontend: http://localhost:8081
+Open http://localhost:8081 and test http://localhost:8081/api/health. Keep the port-forward terminal open while using the application.
 
-API health check: http://localhost:8081/api/health
-
-**Step 8 — Troubleshooting**
+**7. Troubleshoot**
 
 ```bash
 kubectl get pods -n responsecentral
@@ -378,160 +266,20 @@ kubectl logs deployment/backend -n responsecentral
 kubectl logs deployment/frontend -n responsecentral
 ```
 
-## System Architecture
-
-ResponseCentral uses a three-tier architecture consisting of a React frontend, Flask REST API, and PostgreSQL database.
-
-### Interactive Architecture Diagram
-
-[View ResponseCentral Architecture on GitDiagram](https://gitdiagram.com/response-central/emergency-responsestarter)
-
-### Architecture Preview
-
-![ResponseCentral Architecture](docs/architecture.png)
-
-The architecture diagram illustrates the repository's code structure and relationships between application components.
-
-### Application Data Flow
-
-```text
-             User / Administrator
-                      |
-                      v
-                 React + Vite
-                      |
-                      v
-                    Nginx
-                      |
-                      v
-                 Flask REST API
-                      |
-                      v
-                 PostgreSQL
-```
-
-### Deployment Architecture
-
-```text
-                  GitHub Repository
-                          |
-                          v
-                    GitHub Actions
-                          |
-               +----------+----------+
-               |                     |
-               v                     v
-          CI Testing            Docker Build
-                                     |
-                                     v
-                              GitHub Container
-                                  Registry
-                                     |
-                                     v
-                            Local Kubernetes
-                                     |
-                         +-----------+-----------+
-                         |           |           |
-                         v           v           v
-                      Frontend     Backend    PostgreSQL
-```
-
-AWS deployment is planned separately using Amazon ECS Fargate, Amazon ECR, and Amazon RDS.
-
-
-## Kubernetes Deployment
-
-ResponseCentral also supports deployment to a local Kubernetes cluster using Docker Desktop.
-
 ### Kubernetes Configuration Files
-
-```text
-k8s/
-├── namespace.yaml
-├── postgres.yaml
-├── backend.yaml
-└── frontend.yaml
-```
 
 | File | Description |
 |---|---|
-| namespace.yaml | Creates the ResponseCentral namespace |
-| postgres.yaml | PostgreSQL StatefulSet, storage, and service |
-| backend.yaml | Flask backend Deployment and service |
-| frontend.yaml | React frontend Deployment and service |
+| `k8s/namespace.yaml` | Creates the `responsecentral` namespace |
+| `k8s/postgres.yaml` | PostgreSQL StatefulSet, persistent storage, and service |
+| `k8s/backend.yaml` | Flask backend Deployment and service |
+| `k8s/frontend.yaml` | React/Nginx frontend Deployment and service |
 
-### 1. Enable Kubernetes
+### Verified Local Kubernetes Status
 
-Enable Kubernetes in Docker Desktop.
+The local deployment has been verified with PostgreSQL, Flask, and React/Nginx pods running, the backend health endpoint returning HTTP 200, and the PostgreSQL schema initialized.
 
-Verify that the cluster is available:
-
-```bash
-kubectl get nodes
-```
-
-### 2. Create the Namespace
-
-```bash
-kubectl apply -f k8s/namespace.yaml
-```
-
-### 3. Configure Kubernetes Secrets
-
-The deployment requires secrets for PostgreSQL credentials and access to the private GitHub Container Registry images.
-
-Required secret names:
-
-```text
-postgres-credentials
-ghcr-credentials
-```
-
-Create these secrets securely before applying the workload manifests.
-
-Do not store real passwords or registry tokens in the repository.
-
-### 4. Deploy Application Services
-
-```bash
-kubectl apply -f k8s/postgres.yaml
-kubectl apply -f k8s/backend.yaml
-kubectl apply -f k8s/frontend.yaml
-```
-
-### 5. Verify Deployment
-
-```bash
-kubectl get pods -n responsecentral
-kubectl get services -n responsecentral
-```
-
-Check the rollout:
-
-```bash
-kubectl rollout status deployment/backend -n responsecentral
-kubectl rollout status deployment/frontend -n responsecentral
-```
-
-For a new database, initialize the schema using the backend management script before using database-dependent application features.
-
-### 6. Access the Application
-
-```bash
-kubectl -n responsecentral port-forward service/frontend 8081:80
-```
-
-Open:
-
-http://localhost:8081
-
-Verify the API:
-
-```bash
-curl http://localhost:8081/api/health
-```
-
-Expected response:
+Expected API health response:
 
 ```json
 {
@@ -539,131 +287,98 @@ Expected response:
 }
 ```
 
-### Kubernetes Deployment Status
-
-The local Kubernetes deployment has been verified with:
-
-- PostgreSQL running successfully.
-- Flask backend running successfully.
-- React frontend running successfully.
-- Backend health endpoint returning HTTP 200.
-- Database schema initialized successfully.
+These checks verify the infrastructure and health endpoint; they do not constitute full end-to-end testing of every application workflow.
 
 ## Docker Container Images
 
-GitHub Actions builds and publishes two Docker images.
+GitHub Actions publishes two multi-platform images to GitHub Container Registry:
 
-**Frontend:**
+| Component | Image |
+|---|---|
+| Frontend | `ghcr.io/response-central/responsecentral-frontend:latest` |
+| Backend | `ghcr.io/response-central/responsecentral-backend:latest` |
 
-```text
-ghcr.io/response-central/responsecentral-frontend:latest
-```
-
-**Backend:**
-
-```text
-ghcr.io/response-central/responsecentral-backend:latest
-```
-
-Both images support:
-
-```text
-linux/amd64
-linux/arm64
-```
-
-The images are published to GitHub Container Registry and may require authentication to pull.
+Both images support `linux/amd64` and `linux/arm64`. The publishing workflow also tags images with the full Git commit SHA. Authentication may be required because the packages can be private.
 
 ## CI/CD Pipeline
 
-ResponseCentral uses GitHub Actions for continuous integration and container publishing.
+ResponseCentral uses GitHub Actions for automated testing and container publishing.
 
 ### Continuous Integration
 
-Workflow:
+Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
-```text
-.github/workflows/ci.yml
-```
+The CI workflow performs:
 
-The CI pipeline performs:
-
-1. Frontend dependency installation.
-2. React production build.
-3. npm security audit.
-4. Backend integration testing with PostgreSQL.
-5. Python dependency security audit.
-6. Docker image build verification.
+1. Frontend dependency installation and production build.
+2. JavaScript dependency security audit (`npm audit`).
+3. Backend integration testing with PostgreSQL.
+4. Python dependency security audit (`pip-audit`).
+5. Docker image build verification.
 
 ### Container Publishing
 
-Workflow:
+Workflow: [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
 
-```text
-.github/workflows/publish.yml
-```
-
-The publishing pipeline:
-
-1. Authenticates with GitHub Container Registry.
-2. Builds Docker images using Docker Buildx.
-3. Produces AMD64 and ARM64 images.
-4. Publishes frontend and backend images.
-5. Tags images with `latest` and the Git commit SHA.
+The publishing workflow authenticates with GHCR, uses Docker Buildx to build AMD64 and ARM64 images, and publishes the frontend and backend images with `latest` and commit-SHA tags.
 
 ### CI/CD Architecture
 
-```text
-Developer
-    |
-    v
-GitHub Repository
-    |
-    v
-GitHub Actions
-    |
-    +------------------------+
-    |                        |
-    v                        v
-Frontend Checks         Backend Checks
-    |                        |
-    +-----------+------------+
-                |
-                v
-          Docker Build
-                |
-                v
-      GitHub Container Registry
-                |
-                v
-       Kubernetes Deployment
-          (local cluster)
+```mermaid
+flowchart TD
+    DEV["Developer"] --> REPO["GitHub Repository"]
+    REPO --> CI["GitHub Actions: CI"]
+    REPO --> PUB["GitHub Actions: Publish"]
+    CI --> FRONT["Frontend Build + npm Audit"]
+    CI --> BACK["Backend Tests + pip-audit"]
+    CI --> VERIFY["Docker Build Verification"]
+    PUB --> BUILD["Docker Buildx: AMD64 + ARM64"]
+    BUILD --> GHCR["GitHub Container Registry"]
+    GHCR -. "Manual/local deployment" .-> K8S["Docker Desktop Kubernetes"]
+    K8S --> WEB["Frontend Pod"]
+    K8S --> API["Backend Pod"]
+    K8S --> PG[("PostgreSQL StatefulSet")]
+    API --> PG
+
+    classDef source fill:#244a6b,color:#fff,stroke:#6f9fc4
+    classDef pipeline fill:#315d65,color:#fff,stroke:#83bdb4
+    classDef target fill:#594b83,color:#fff,stroke:#b7a6e2
+    class DEV,REPO source
+    class CI,PUB,FRONT,BACK,VERIFY,BUILD pipeline
+    class GHCR,K8S,WEB,API,PG target
 ```
 
-Kubernetes deployment is currently performed separately from the image-publishing workflow.
+**Note:** Kubernetes deployment is performed separately from the image-publishing workflow; publishing an image does not automatically deploy it to the local cluster.
 
 ## AWS Cloud Deployment (In Progress)
 
-The planned AWS deployment will use managed cloud services to host ResponseCentral.
+The planned AWS deployment uses managed cloud services. AWS infrastructure provisioning and application verification are separate from the completed local Docker Compose and Kubernetes checks.
 
 ### Proposed AWS Architecture
 
-```text
-                 Internet
-                    |
-                    v
-        Application Load Balancer
-                    |
-          +---------+---------+
-          |                   |
-          v                   v
-    Frontend Service     Backend Service
-     ECS Fargate          ECS Fargate
-                              |
-                              v
-                      Amazon RDS
-                       PostgreSQL
+```mermaid
+flowchart TD
+    USERS["Internet Users"] --> ALB["Application Load Balancer"]
+    ALB --> FRONT["Frontend: ECS Fargate"]
+    ALB --> BACK["Backend: ECS Fargate"]
+    FRONT -. "API requests through ALB" .-> ALB
+    BACK --> RDS[("Amazon RDS: PostgreSQL")]
+    ECR["Amazon ECR"] -. "Container images" .-> FRONT
+    ECR -. "Container images" .-> BACK
+    SECRETS["AWS Secrets Manager"] -. "Application secrets" .-> BACK
+    FRONT -. "Logs" .-> CW["Amazon CloudWatch"]
+    BACK -. "Logs" .-> CW
+    GHA["GitHub Actions + OIDC"] -. "Planned image publishing" .-> ECR
+
+    classDef edge fill:#244a6b,color:#fff,stroke:#6f9fc4
+    classDef compute fill:#315d65,color:#fff,stroke:#83bdb4
+    classDef data fill:#594b83,color:#fff,stroke:#b7a6e2
+    class USERS,ALB edge
+    class FRONT,BACK compute
+    class RDS,ECR,SECRETS,CW,GHA data
 ```
+
+The diagram represents the **target architecture**, not a claim that the AWS services are already deployed. Production networking, TLS, IAM roles, security groups, and service configuration must be implemented and validated during deployment.
 
 ### Planned AWS Services
 
@@ -671,56 +386,41 @@ The planned AWS deployment will use managed cloud services to host ResponseCentr
 |---|---|
 | Amazon ECR | Container image registry |
 | Amazon ECS | Container orchestration |
-| AWS Fargate | Serverless container compute |
+| AWS Fargate | Managed container compute |
 | Amazon RDS | Managed PostgreSQL database |
-| Application Load Balancer | HTTP/HTTPS traffic routing |
+| Application Load Balancer | HTTP/HTTPS routing |
 | AWS Secrets Manager | Secure application secrets |
-| Amazon CloudWatch | Logging and monitoring |
+| Amazon CloudWatch | Logs and monitoring |
 | AWS IAM | Identity and access management |
-| GitHub Actions OIDC | Secure CI/CD authentication |
+| GitHub Actions OIDC | Short-lived CI/CD authentication |
 
-### Deployment Status
+**Status:** AWS deployment is in progress. The local application has been tested with Docker Compose and Kubernetes; AWS deployment will be documented after infrastructure and application checks succeed.
 
-**AWS deployment is currently in progress.**
-
-The application has already been tested locally using Docker Compose and Kubernetes.
-
-AWS infrastructure will be provisioned and verified separately.
-
-## Security
-
-ResponseCentral incorporates application and infrastructure security considerations.
+## Security and Privacy
 
 ### Application Security
 
 - Administrator authentication and session management.
 - Password hashing.
 - Parameterized database queries.
-- Input validation.
-- Protected administrative endpoints.
-- Environment-based configuration.
+- Input validation and protected administrative endpoints.
+- Environment-based application configuration.
 
 ### Infrastructure Security
 
 - Secrets excluded from source control.
 - Kubernetes Secrets for sensitive configuration.
-- Container vulnerability checks.
-- Dependency security audits.
+- Dependency security audits and container build checks.
 - IAM-based AWS access control.
-- Planned HTTPS and encrypted cloud storage.
-- Planned monitoring and restricted network access.
+- Planned HTTPS, encrypted cloud storage, monitoring, and restricted network access.
 
 ### Data Privacy
 
-ResponseCentral is an academic demonstration project.
-
-The system should use synthetic or non-sensitive demonstration data. It is not intended for live emergency dispatch or the storage of real patient information without additional security, operational, and regulatory safeguards.
+ResponseCentral is an academic demonstration project. Use **synthetic or non-sensitive demonstration data**. It is not intended for live emergency dispatch or storage of real patient information without additional security, operational, and regulatory safeguards.
 
 **HIPAA compliance has not been established.**
 
 ## Testing and Verification
-
-The project uses several verification methods:
 
 | Component | Verification |
 |---|---|
@@ -769,24 +469,19 @@ Emergency-ResponseStarter/
 
 ## Future Improvements
 
-Potential future enhancements include:
-
-- AWS production-style deployment.
-- Automated deployment through GitHub Actions.
-- Improved response-unit availability tracking.
-- Real-time incident updates.
-- Database query and caching optimization.
-- Additional monitoring and audit logging.
-- Hospital capacity integration.
-- Enhanced role-based access control.
-- Automated database backup and recovery.
+- Complete and verify the AWS cloud deployment.
+- Automate deployment through GitHub Actions.
+- Improve response-unit availability tracking and real-time incident updates.
+- Optimize database queries and caching.
+- Expand monitoring and audit logging.
+- Integrate hospital capacity information.
+- Enhance role-based access control.
+- Implement and test automated backup and recovery.
 
 ## Disclaimer
 
-ResponseCentral is developed for educational and demonstration purposes.
-
-It is not an official emergency dispatch system and should not be relied upon for real-world emergency response.
+ResponseCentral is developed for educational and demonstration purposes. It is **not an official emergency dispatch system** and should not be relied upon for real-world emergency response.
 
 ## Repository
 
-**GitHub:** https://github.com/Response-Central/Emergency-ResponseStarter
+[GitHub — Response-Central/Emergency-ResponseStarter](https://github.com/Response-Central/Emergency-ResponseStarter)
